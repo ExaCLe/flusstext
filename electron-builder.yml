@@ -1,0 +1,25 @@
+appId: de.flusstext.app
+productName: Flusstext
+directories:
+  buildResources: build
+files:
+  - out/**
+  - package.json
+  - build/icon.png
+  - '!**/*.map'
+asarUnpack:
+  - node_modules/sherpa-onnx-*/**
+  - node_modules/ffmpeg-static/**
+  - node_modules/uiohook-napi/**
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  artifactName: ${productName}-Setup-${version}.${ext}
+  language: '1031'
+# Bereits installiertes Electron verwenden (kein zweiter Download)
+electronDist: node_modules/electron/dist

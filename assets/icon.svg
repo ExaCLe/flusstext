@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#7c3aed"/>
-  <text x="32" y="32" dy="0.35em" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif" font-size="32" font-weight="600" fill="#ffffff">T</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28">
+  <rect width="28" height="28" rx="8" fill="#141517"/>
+  <g fill="#fafaf9"><rect x="5" y="10" width="3" height="8" rx="1.5"/><rect x="10" y="7" width="3" height="14" rx="1.5"/><rect x="15" y="9" width="3" height="10" rx="1.5"/><rect x="20" y="11.5" width="3" height="5" rx="1.5"/></g>
 </svg>
