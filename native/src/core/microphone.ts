@@ -1,5 +1,6 @@
 // Das Mikrofon des Hosts gehört immer genau einer Funktion (Aufnahme oder Diktat).
 import type { HostEvent, NativeHost } from './host'
+import { CancelledError, type CancelToken } from './speech-types'
 
 export type MicOwner = 'recording' | 'dictation'
 
@@ -9,40 +10,48 @@ export interface MicHandlers {
 }
 
 export class Microphone {
-  private owner: MicOwner | null = null
-  private handlers: MicHandlers | null = null
+  private lease: { owner: MicOwner; handlers: MicHandlers | null; startingAudio: boolean; token?: CancelToken } | null = null
 
   constructor(private host: NativeHost) {}
 
   get busy(): MicOwner | null {
-    return this.owner
+    return this.lease?.owner ?? null
   }
 
   /** Zugriff anfragen und Aufnahme in `path` starten. */
-  async start(owner: MicOwner, path: string, deviceId: string, handlers: MicHandlers): Promise<void> {
-    if (this.owner) throw new Error(this.owner === 'recording' ? 'Es läuft bereits eine Aufnahme.' : 'Es läuft gerade ein Diktat.')
-    this.owner = owner
+  async start(owner: MicOwner, path: string, deviceId: string, handlers: MicHandlers, token?: CancelToken): Promise<void> {
+    if (this.lease) throw new Error(this.lease.owner === 'recording' ? 'Es läuft bereits eine Aufnahme.' : 'Es läuft gerade ein Diktat.')
+    const lease = { owner, handlers: null as MicHandlers | null, startingAudio: false, token }
+    this.lease = lease
     try {
       if (!(await this.host.requestMicrophone())) throw new Error('Kein Zugriff aufs Mikrofon. Bitte den Mikrofonzugriff für Flusstext in den Systemeinstellungen erlauben.')
-      this.handlers = handlers
+      token?.throwIfCancelled()
+      if (this.lease !== lease) throw new CancelledError()
+      lease.handlers = handlers
+      lease.startingAudio = true
       await this.host.audioStart(path, deviceId || 'default')
+      token?.throwIfCancelled()
+      if (this.lease !== lease) throw new CancelledError()
+      lease.startingAudio = false
     } catch (e) {
-      this.owner = null
-      this.handlers = null
+      // Keep the lease until an in-flight audioStart is cleaned up. It must not stop a newer session.
+      if (lease.startingAudio && this.lease === lease) await this.host.audioCancel().catch(() => undefined)
+      if (this.lease === lease) this.lease = null
       throw e
     }
   }
 
   /** Nur der aktuelle Besitzer gibt das Mikrofon frei. */
-  release(owner: MicOwner): void {
-    if (this.owner !== owner) return
-    this.owner = null
-    this.handlers = null
+  release(owner: MicOwner, token?: CancelToken): void {
+    if (this.lease?.owner !== owner || this.lease.startingAudio) return
+    if (token && this.lease.token !== token) return
+    this.lease = null
   }
 
   handle(event: HostEvent): void {
-    if (!this.handlers) return
-    if (event.type === 'audio') this.handlers.onAudio(event.elapsed, event.level)
-    else if (event.type === 'audioError') this.handlers.onError(event.message || 'Mikrofon nicht verfügbar')
+    const handlers = this.lease?.handlers
+    if (!handlers) return
+    if (event.type === 'audio') handlers.onAudio(event.elapsed, event.level)
+    else if (event.type === 'audioError') handlers.onError(event.message || 'Mikrofon nicht verfügbar')
   }
 }

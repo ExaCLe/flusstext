@@ -77,11 +77,14 @@ export class Dictation {
           if (this.session !== session) return
           void this.cancel().finally(() => this.set({ ...IDLE, error: message }))
         }
-      })
+      }, session.token)
     } catch (e) {
-      this.session = null
+      if (this.session === session) this.session = null
+      await removePath(session.path)
+      if (session.token.cancelled || isCancelled(e)) return
       throw e
     }
+    if (this.session !== session || session.token.cancelled) return
     this.set({ phase: 'listening', elapsed: 0, level: 0 })
     // Modell schon während des Sprechens laden
     void this.speech.preload(asr).catch(() => undefined)
@@ -94,7 +97,9 @@ export class Dictation {
   /** Aufnahme beenden und erkennen. Wirft verständliche Fehler (z. B. „Keine Sprache erkannt“). */
   async stop(): Promise<void> {
     const session = this.session
-    if (!session || this.value.phase !== 'listening') return
+    if (!session) return
+    if (this.value.phase === 'idle') return this.cancel()
+    if (this.value.phase !== 'listening') return
     if (session.limit) clearTimeout(session.limit)
     this.set({ phase: 'processing', elapsed: this.value.elapsed, level: 0 })
     const t0 = Date.now()
@@ -103,7 +108,7 @@ export class Dictation {
     try {
       const stopped = await this.host.audioStop()
       recording = false
-      this.mic.release('dictation')
+      this.mic.release('dictation', session.token)
       path = toPath(stopped.path || session.path)
       const s = this.settings.get()
       const asr = this.asr(s)
@@ -131,8 +136,8 @@ export class Dictation {
       throw e
     } finally {
       // Konnte der Host nicht stoppen, die Aufnahme verwerfen statt das Mikrofon offen zu lassen
-      if (recording) await this.host.audioCancel().catch(() => undefined)
-      this.mic.release('dictation')
+      if (recording && this.session === session) await this.host.audioCancel().catch(() => undefined)
+      this.mic.release('dictation', session.token)
       if (this.session === session) this.session = null
       await removePath(path)
       if (path !== session.path) await removePath(session.path)
@@ -164,7 +169,7 @@ export class Dictation {
     try {
       if (this.mic.busy === 'dictation') await this.host.audioCancel()
     } finally {
-      this.mic.release('dictation')
+      this.mic.release('dictation', session.token)
       await removePath(session.path)
     }
   }

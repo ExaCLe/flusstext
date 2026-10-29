@@ -12,6 +12,7 @@ import { uuid } from './domain/text'
 import { isSpeechWav, pcm16ToFloat } from './domain/wav'
 import { join, readRange, removePath, RNFS, readBinaryFile, serialized, toPath, wavInfo, writeWav, type AppPaths } from './fs'
 import type { NativeHost } from './host'
+import { engineCall } from './engine-call'
 import { CancelledError, type AsrSpec, type CancelToken, type DiarizationSpec, type EngineSegment, type SpeechEngine, type SpeechResult, type TranscribeRequest } from './speech-types'
 
 /** Abschnittslänge: Whisper/NeMo bis 24 s, Nemotron bis 30 s (Modellgrenze 32 s). */
@@ -218,15 +219,15 @@ class DeviceSpeech implements SpeechEngine {
     return { path: out, temp: true }
   }
 
-  private async diarize(path: string, spec: DiarizationSpec, threads: number): Promise<SpeakerTurn[]> {
-    const raw = await this.host.engineCall('diarize', {
+  private async diarize(path: string, spec: DiarizationSpec, threads: number, token: CancelToken): Promise<SpeakerTurn[]> {
+    const raw = await engineCall(this.host, 'diarize', {
       path,
       segmentation: spec.segmentation,
       embedding: spec.embedding,
       threads: Math.max(1, Math.min(MAX_DIAR_THREADS, threads)),
       numSpeakers: spec.numSpeakers,
       threshold: spec.threshold
-    })
+    }, token)
     return normalizeTurns(raw, spec.numSpeakers)
   }
 
@@ -256,7 +257,7 @@ class DeviceSpeech implements SpeechEngine {
       let turns: SpeakerTurn[] | undefined
       if (req.diarization && duration > 2) {
         progress('diarizing', 0)
-        turns = await this.diarize(wav.path, req.diarization, asr.threads)
+        turns = await this.diarize(wav.path, req.diarization, asr.threads, token)
         token.throwIfCancelled()
         progress('diarizing', 1)
       }
@@ -289,7 +290,7 @@ class DeviceSpeech implements SpeechEngine {
   async assignSpeakers(path: string, segments: EngineSegment[], asr: AsrSpec, spec: DiarizationSpec, _settings: unknown, token: CancelToken): Promise<EngineSegment[]> {
     const info = await wavInfo(toPath(path))
     if (info.dataBytes / 2 / SR <= 2 || !segments.length) return segments
-    const turns = await this.diarize(toPath(path), spec, asr.threads)
+    const turns = await this.diarize(toPath(path), spec, asr.threads, token)
     token.throwIfCancelled()
     if (!turns.length) return segments
     return segments.map((seg) => ({ ...seg, speaker: dominantSpeaker(turns, seg) }))

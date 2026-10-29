@@ -261,3 +261,117 @@ test('Wiedergabe: Zustand folgt den Player-Ereignissen, Tempo begrenzt', async (
   await playback.forget(id)
   assert.equal(playback.state().transcriptId, null)
 })
+
+test('Systemunterbrechung erhält die WAV und legt ein wiederherstellbares Transkript an', async () => {
+  const x = await setup('ios')
+  await x.recorder.start({})
+  await x.host.speak(7)
+  const path = x.host.path
+  x.mic.handle({ type: 'audioError', message: 'Anruf' })
+  await x.recorder.session.recovery
+  assert.equal(x.recorder.state().phase, 'idle')
+  assert.equal(x.mic.busy, null)
+  assert.ok(fs.nodes.has(path), 'system interruption must never delete captured audio')
+  const [meta] = x.transcripts.list()
+  const saved = await x.transcripts.get(meta.id)
+  assert.equal(saved.status, 'error')
+  assert.equal(saved.duration, 7)
+  assert.equal(saved.audioPath, path)
+  assert.match(saved.error, /Anruf/)
+})
+
+test('Auch ein bereits systemseitig gestoppter Recorder behält seine Audiodatei', async () => {
+  const x = await setup('ios')
+  await x.recorder.start({})
+  await x.host.speak(3)
+  const path = x.host.path
+  x.host.audioStop = async () => { x.host.path = null; throw new Error('Keine aktive Aufnahme') }
+  x.mic.handle({ type: 'audioError', message: 'Gerät getrennt' })
+  await x.recorder.session.recovery
+  assert.ok(fs.nodes.has(path))
+  const [saved] = x.transcripts.list()
+  assert.equal(saved.duration, 3)
+  assert.equal(saved.status, 'error')
+})
+
+test('Diktat: Escape während der Berechtigungsabfrage startet später kein Mikrofon', async () => {
+  const x = await setup('macos')
+  let allow
+  x.host.requestMicrophone = () => new Promise(resolve => { allow = resolve })
+  const starting = x.dictation.start()
+  await x.dictation.cancel()
+  allow(true)
+  await starting
+  assert.equal(x.host.path, null)
+  assert.equal(x.mic.busy, null)
+  assert.equal(x.dictation.state().phase, 'idle')
+})
+
+test('Diktat: Abbruch eines laufenden audioStart räumt danach auf und hält seine Mikrofon-Lease', async () => {
+  const x = await setup('macos')
+  let finish
+  const realStart = x.host.audioStart
+  x.host.audioStart = path => new Promise(resolve => { finish = async () => { await realStart(path); resolve() } })
+  const starting = x.dictation.start()
+  await new Promise(resolve => setImmediate(resolve))
+  const path = x.dictation.session.path
+  await x.dictation.cancel()
+  assert.equal(x.mic.busy, 'dictation', 'no newer owner may start before late startup cleanup')
+  await assert.rejects(x.recorder.start({}), /Diktat/)
+  await finish()
+  await starting
+  assert.equal(x.host.path, null)
+  assert.equal(x.mic.busy, null)
+  assert.equal(x.dictation.state().phase, 'idle')
+  assert.ok(!fs.nodes.has(path))
+})
+
+test('Späte Antwort einer abgebrochenen Berechtigung darf eine neue Aufnahme nicht freigeben', async () => {
+  const x = await setup('macos')
+  let allow
+  x.host.requestMicrophone = () => new Promise(resolve => { allow = resolve })
+  const old = x.dictation.start()
+  await x.dictation.cancel()
+  x.host.requestMicrophone = async () => true
+  await x.recorder.start({})
+  const newPath = x.host.path
+  allow(true)
+  await old
+  assert.equal(x.mic.busy, 'recording')
+  assert.equal(x.host.path, newPath)
+  await x.recorder.cancel()
+})
+
+test('Aufnahme kann schon während der Mikrofon-Berechtigungsabfrage verworfen werden', async () => {
+  const x = await setup('ios')
+  let allow
+  x.host.requestMicrophone = () => new Promise(resolve => { allow = resolve })
+  const starting = x.recorder.start({})
+  await x.recorder.cancel()
+  allow(true)
+  await starting
+  assert.equal(x.host.path, null)
+  assert.equal(x.mic.busy, null)
+  assert.equal(x.recorder.state().phase, 'idle')
+})
+
+test('Spätes Ergebnis nach Verwerfen überschreibt keine neu gestartete Aufnahme', async () => {
+  const x = await setup('ios')
+  await x.recorder.start({})
+  await x.host.speak(3)
+  let finish
+  x.speech.transcribe = () => new Promise(resolve => { finish = () => resolve({ segments: [{start:0,end:3,text:'late'}], duration:3, peaks:[] }) })
+  const stopping = x.recorder.stop({ diarization:false })
+  const rejected = assert.rejects(stopping, /cancelled/)
+  await new Promise(resolve => setImmediate(resolve))
+  await x.recorder.cancel()
+  await x.recorder.start({})
+  const current = x.host.path
+  finish()
+  await rejected
+  assert.equal(x.recorder.state().phase, 'recording')
+  assert.equal(x.host.path, current)
+  assert.equal(x.mic.busy, 'recording')
+  assert.equal(x.transcripts.list().length, 0, 'discarded work cannot recreate a transcript')
+  await x.recorder.cancel()
+})

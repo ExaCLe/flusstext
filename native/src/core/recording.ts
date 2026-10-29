@@ -14,7 +14,7 @@ import type { NativeHost } from './host'
 import type { Microphone } from './microphone'
 import type { ModelManager } from './models'
 import type { SettingsStore } from './settings'
-import { CancelToken, isCancelled, type AsrSpec, type SpeechEngine } from './speech-types'
+import { CancelToken, CancelledError, isCancelled, type AsrSpec, type SpeechEngine } from './speech-types'
 import type { TranscriptStore } from './store'
 
 /** Zeitabstand der Live-Erkennung: Telefone seltener, um Akku und Wärme zu schonen. */
@@ -37,6 +37,8 @@ interface Session {
   pending: string
   timer: ReturnType<typeof setInterval> | null
   tick: Promise<void> | null
+  interruption?: string
+  recovery?: Promise<void>
 }
 
 const IDLE: RecordingState = { phase: 'idle', elapsed: 0, level: 0 }
@@ -97,6 +99,8 @@ export class Recorder {
       timer: null,
       tick: null
     }
+    this.session = session
+    try {
     await this.mic.start('recording', session.path, this.settings.get().micDeviceId, {
       onAudio: (elapsed, level) => {
         if (this.session !== session || this.value.phase !== 'recording') return
@@ -104,16 +108,69 @@ export class Recorder {
       },
       onError: (message) => {
         if (this.session !== session) return
-        this.bus.error(`Aufnahme unterbrochen: ${message}`)
-        void this.cancel()
+        session.interruption = message
+        if (this.value.phase === 'recording' || this.value.phase === 'paused') void this.recover(session, message)
       }
-    })
-    this.session = session
+    }, session.token)
+    } catch (e) {
+      if (this.session === session) this.session = null
+      await removePath(session.path)
+      if (session.token.cancelled || isCancelled(e)) return
+      throw e
+    }
+    if (this.session !== session || session.token.cancelled) return
     this.set({ phase: 'recording', elapsed: 0, level: 0, sessionId: id, text: '' })
+    if (session.interruption) { await this.recover(session, session.interruption); return }
     const asr = this.liveAsr(session)
     if (asr) {
       void this.speech.preload(asr).catch(() => undefined)
       session.timer = setInterval(() => this.schedule(session), isPhone(this.platform) ? PHONE_INTERVAL_MS : DESKTOP_INTERVAL_MS)
+    }
+  }
+
+  /** System interruptions preserve the WAV and create a recoverable transcript. Only explicit discard deletes it. */
+  private recover(s: Session, message: string): Promise<void> {
+    if (s.recovery) return s.recovery
+    s.recovery = this.preserveInterrupted(s, message)
+    return s.recovery
+  }
+
+  private async preserveInterrupted(s: Session, message: string): Promise<void> {
+    if (this.session !== s) return
+    s.token.cancel()
+    if (s.timer) clearInterval(s.timer)
+    s.timer = null
+    let path = s.path, duration = this.value.elapsed
+    this.set({ phase: 'processing', level: 0 })
+    try {
+      await s.tick
+      if (this.session !== s) return
+      try {
+        const stopped = await this.host.audioStop()
+        path = toPath(stopped.path || path)
+        duration = stopped.duration || duration
+      } catch {
+        // AVAudioRecorder may already have stopped. Its existing file is still recovery data.
+      }
+      if (this.session !== s) return
+      try { duration = (await wavInfo(path)).dataBytes / 2 / SR } catch { /* keep the recorded elapsed time */ }
+      const st = this.settings.get()
+      const segments = toSegments(s.segments, st.replacements)
+      if (this.session !== s) return
+      await this.transcripts.save({
+        id: s.id, title: defaultLiveTitle(new Date(s.startedAt)), createdAt: s.startedAt,
+        source: 'recording', duration, language: s.opts.language ?? st.language,
+        modelId: s.opts.modelId ?? st.transcriptionModel ?? '',
+        status: 'error', error: `Aufnahme unterbrochen: ${message}. Die Audiodatei wurde zur Wiederherstellung gespeichert.`,
+        speakerCount: 0, preview: '', words: 0, audioPath: path, segments, speakers: speakersFor(segments)
+      })
+      if (this.session !== s) { await this.transcripts.remove(s.id); return }
+      this.bus.error(`Aufnahme unterbrochen: ${message}. Die Aufnahme ist unter Transkripte gespeichert.`)
+    } catch (e) {
+      this.bus.error(e, 'Die Audiodatei bleibt gespeichert, aber ihr Transkript konnte nicht angelegt werden.')
+    } finally {
+      this.mic.release('recording', s.token)
+      if (this.session === s) { this.session = null; this.set(IDLE) }
     }
   }
 
@@ -191,13 +248,15 @@ export class Recorder {
     let stopped: { path: string; duration: number }
     try {
       await s.tick
+      s.token.throwIfCancelled()
+      if (this.session !== s) throw new CancelledError()
       stopped = await this.host.audioStop()
     } catch (e) {
       // Host konnte nicht stoppen: Zustand zurück, damit erneut versucht werden kann
-      this.set({ phase: before })
+      if (this.session === s && !s.token.cancelled) this.set({ phase: before })
       throw e
     }
-    this.mic.release('recording')
+    this.mic.release('recording', s.token)
     const path = toPath(stopped.path || s.path)
     let rest: string | null = null
     try {
@@ -209,6 +268,7 @@ export class Recorder {
         rest = join(this.paths.tmp, `rest-${s.id}.wav`)
         await writeWavSlice(path, info, s.committed, duration, rest)
         const res = await this.speech.transcribe({ path: rest, asr, settings: st, token: s.token })
+        s.token.throwIfCancelled()
         segments = [...segments, ...shiftSegments(res.segments, s.committed)]
       }
       if (opts.diarization && segments.length) {
@@ -217,6 +277,8 @@ export class Recorder {
       }
       const peaks = await this.peaks(path, info.dataOffset, info.dataBytes)
       const final = toSegments(segments, st.replacements)
+      s.token.throwIfCancelled()
+      if (this.session !== s) throw new CancelledError()
       const t: Transcript = {
         id: s.id,
         title: opts.title?.trim() || defaultLiveTitle(new Date(s.startedAt)),
@@ -237,8 +299,14 @@ export class Recorder {
         ...(opts.bookmarks?.length ? { bookmarks: opts.bookmarks.filter((b) => b && Number.isFinite(b.time) && typeof b.label === 'string') } : {})
       }
       await this.transcripts.save(t)
+      if (this.session !== s || s.token.cancelled) {
+        await this.transcripts.remove(s.id)
+        throw new CancelledError()
+      }
       return t.id
     } catch (e) {
+      if (s.token.cancelled || this.session !== s) throw new CancelledError()
+      if (isCancelled(e)) throw e
       // Audio bleibt erhalten: Transkript mit Fehler speichern, statt die Aufnahme zu verlieren
       const message = e instanceof Error ? e.message : String(e)
       await this.transcripts
@@ -262,11 +330,11 @@ export class Recorder {
           ...(opts.bookmarks?.length ? { bookmarks: opts.bookmarks } : {})
         })
         .catch(() => undefined)
+      if (this.session !== s) await this.transcripts.remove(s.id)
       throw e
     } finally {
       if (rest) await removePath(rest)
-      this.session = null
-      this.set(IDLE)
+      if (this.session === s) { this.session = null; this.set(IDLE) }
     }
   }
 
@@ -287,7 +355,7 @@ export class Recorder {
     try {
       await this.host.audioCancel()
     } finally {
-      this.mic.release('recording')
+      this.mic.release('recording', s.token)
       await removePath(s.path)
     }
   }
