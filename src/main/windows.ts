@@ -23,11 +23,11 @@ function titleBarColors(): { color: string; symbolColor: string; height: number 
 export function applyTheme(): void {
   const t = settings.get().theme
   nativeTheme.themeSource = t
-  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setTitleBarOverlay(titleBarColors())
+  if (process.platform === 'win32' && mainWindow && !mainWindow.isDestroyed()) mainWindow.setTitleBarOverlay(titleBarColors())
 }
 
 nativeTheme.on('updated', () => {
-  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setTitleBarOverlay(titleBarColors())
+  if (process.platform === 'win32' && mainWindow && !mainWindow.isDestroyed()) mainWindow.setTitleBarOverlay(titleBarColors())
 })
 
 export function getMainWindow(): BrowserWindow | null {
@@ -55,8 +55,8 @@ export function createMainWindow(): BrowserWindow {
     title: 'Flusstext',
     icon: join(__dirname, '../../build/icon.png'),
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1a1b1e' : '#f3f3f1',
-    titleBarStyle: 'hidden',
-    titleBarOverlay: titleBarColors(),
+    titleBarStyle: process.platform === 'darwin' ? 'default' : 'hidden',
+    ...(process.platform === 'win32' ? { titleBarOverlay: titleBarColors() } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: true,

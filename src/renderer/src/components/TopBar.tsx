@@ -32,7 +32,7 @@ export function TopBar({ trail }: { trail?: string }): ReactNode {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.ctrlKey && (e.key === 'k' || e.key === 'f')) {
+      if ((window.api.platform === 'darwin' ? e.metaKey : e.ctrlKey) && (e.key === 'k' || e.key === 'f')) {
         e.preventDefault()
         inputRef.current?.focus()
         inputRef.current?.select()
@@ -90,7 +90,7 @@ export function TopBar({ trail }: { trail?: string }): ReactNode {
               <X className="size-3.5" />
             </button>
           ) : (
-            <kbd className="font-mono text-[11px]">Strg K</kbd>
+            <kbd className="font-mono text-[11px]">{window.api.platform === 'darwin' ? '⌘ K' : 'Strg K'}</kbd>
           )}
         </label>
       )}

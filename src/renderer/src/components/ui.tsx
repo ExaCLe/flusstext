@@ -206,7 +206,7 @@ export function Hotkey({ keys, className }: { keys: number[]; className?: string
   return (
     <span className={cn('inline-flex items-center gap-1', className)}>
       {sortKeys(keys).map((k) => (
-        <Kbd key={k}>{keyLabel(k)}</Kbd>
+        <Kbd key={k}>{keyLabel(k, window.api.platform)}</Kbd>
       ))}
     </span>
   )

@@ -1,6 +1,6 @@
 // Globales Diktat im Stil von Wispr Flow: Hotkey halten (oder antippen für freihändig),
 // sprechen, loslassen – der Text wird ins fokussierte Textfeld eingefügt.
-import { clipboard, ClipboardItem, ipcMain, Notification } from 'electron'
+import { app, clipboard, ClipboardItem, ipcMain, Notification, systemPreferences } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { uIOhook, UiohookKey } from 'uiohook-napi'
 import { keyLabel, normalizeKey, sortKeys } from '@shared/keys'
@@ -41,7 +41,7 @@ function idleEnabled(): boolean {
 
 function idleHint(): string {
   const s = settings.get()
-  const keys = sortKeys(s.dictation.hotkey).map(keyLabel).join(' + ')
+  const keys = sortKeys(s.dictation.hotkey).map((k) => keyLabel(k, process.platform)).join(' + ')
   return s.dictation.mode === 'toggle' ? `Klicken oder ${keys} drücken` : `Klicken oder ${keys} halten`
 }
 
@@ -192,7 +192,8 @@ async function paste(text: string, restore: boolean): Promise<boolean> {
   const saved = restore ? await snapshotClipboard() : null
   await clipboard.writeText(text)
   await sleep(30)
-  uIOhook.keyTap(UiohookKey.V, [UiohookKey.Ctrl])
+  if (process.platform === 'darwin' && !systemPreferences.isTrustedAccessibilityClient(false)) return false
+  uIOhook.keyTap(UiohookKey.V, [process.platform === 'darwin' ? UiohookKey.Meta : UiohookKey.Ctrl])
   if (saved) {
     setTimeout(async () => {
       if ((await clipboard.readText()) !== text) return // Nutzer hat inzwischen etwas anderes kopiert
@@ -240,7 +241,7 @@ function onKeyDown(code: number): void {
     if (phase === 'idle') {
       pressedAt = Date.now()
       // Verhindert, dass beim Loslassen der Win-Taste das Startmenü aufgeht
-      if (s.dictation.hotkey.includes(UiohookKey.Meta)) uIOhook.keyTap(UiohookKey.F24)
+      if (process.platform === 'win32' && s.dictation.hotkey.includes(UiohookKey.Meta)) uIOhook.keyTap(UiohookKey.F24)
       start()
     } else if (handsFree && (phase === 'listening' || phase === 'arming')) {
       stop()
@@ -269,15 +270,23 @@ function onKeyUp(code: number): void {
   stop()
 }
 
-export function initDictation(): void {
-  uIOhook.on('keydown', (e) => onKeyDown(e.keycode))
-  uIOhook.on('keyup', (e) => onKeyUp(e.keycode))
+function startKeyboardHook(): void {
+  if (hookStarted) return
+  // libuiohook may terminate the process if macOS denies its event tap.
+  if (process.platform === 'darwin' && !systemPreferences.isTrustedAccessibilityClient(false)) return
   try {
     uIOhook.start()
     hookStarted = true
   } catch (e) {
     console.error('Globaler Tastatur-Hook konnte nicht gestartet werden', e)
   }
+}
+
+export function initDictation(): void {
+  uIOhook.on('keydown', (e) => onKeyDown(e.keycode))
+  uIOhook.on('keyup', (e) => onKeyUp(e.keycode))
+  startKeyboardHook()
+  app.on('browser-window-focus', startKeyboardHook)
 
   ipcMain.on('overlay:micReady', () => {
     if (phase !== 'arming') return

@@ -1,5 +1,7 @@
 // Übersetzt ein Katalogmodell in eine konkrete Erkennungs-Konfiguration
 // (sherpa-onnx im Engine-Prozess oder ein whisper.cpp-Server auf der GPU).
+import { app } from 'electron'
+import { join } from 'node:path'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { createServer } from 'node:net'
@@ -66,16 +68,25 @@ function freePort(): Promise<number> {
 }
 
 export function whisperRuntime(useGpu: boolean): { id: string; gpu: boolean } | null {
+  if (process.platform === 'darwin') {
+    return existsSync(macWhisperPath()) ? { id: 'whispercpp-metal', gpu: useGpu } : null
+  }
   if (useGpu && isInstalled('whispercpp-cuda')) return { id: 'whispercpp-cuda', gpu: true }
   if (isInstalled('whispercpp-cpu')) return { id: 'whispercpp-cpu', gpu: false }
   if (isInstalled('whispercpp-cuda')) return { id: 'whispercpp-cuda', gpu: false }
   return null
 }
 
+function macWhisperPath(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'whisper', 'whisper-server')
+    : join(app.getAppPath(), 'build', 'whisper-mac', 'whisper-server')
+}
+
 async function ensureWhisperServer(id: string, s: Settings): Promise<string> {
   const rt = whisperRuntime(s.useGpu)
   if (!rt) throw new Error('Für Whisper-Modelle wird die whisper.cpp-Laufzeit benötigt (Modelle › Komponenten).')
-  const exe = modelPath(rt.id, 'whisper-server.exe')
+  const exe = process.platform === 'darwin' ? macWhisperPath() : modelPath(rt.id, 'whisper-server.exe')
   if (!existsSync(exe)) throw new Error('whisper-server.exe fehlt – bitte die Laufzeit neu installieren.')
   const key = `${id}:${rt.id}:${rt.gpu}:${s.threads}`
   if (server && server.key === key && server.proc.exitCode === null) {
@@ -86,7 +97,7 @@ async function ensureWhisperServer(id: string, s: Settings): Promise<string> {
   const port = await freePort()
   const args = ['-m', modelPath(id, 'model.bin'), '--host', '127.0.0.1', '--port', String(port), '-t', String(Math.max(4, s.threads)), '-l', 'de']
   if (!rt.gpu) args.push('-ng')
-  const proc = spawn(exe, args, { cwd: modelPath(rt.id), windowsHide: true })
+  const proc = spawn(exe, args, { cwd: process.platform === 'darwin' ? app.getPath('temp') : modelPath(rt.id), windowsHide: true })
   const url = `http://127.0.0.1:${port}`
   let log = ''
   const ready = new Promise<void>((resolve, reject) => {
