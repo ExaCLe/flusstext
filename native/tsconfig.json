@@ -1,0 +1,27 @@
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true,
+    "types": [
+      "react",
+      "react-native"
+    ],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler"
+  },
+  "include": [
+    "App.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../src/shared/**/*.ts",
+    "../src/engine/nemotron-frontend.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "ios/Pods",
+    "macos/Pods",
+    "build",
+    "engine-resources"
+  ]
+}

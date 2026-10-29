@@ -42,6 +42,10 @@ Falls ein Download im VPN weiterhin scheitert, sollte die IT die Windows-Proxyei
 
 Die Spracherkennung und Sprecherzuordnung verwenden anschließend lokale Modelldateien. Für Whisper gehen Audio-Anfragen ausschließlich an den lokalen Prozess auf `127.0.0.1`; Flusstext enthält keinen Cloud-Transkriptionsdienst und keine Nutzungs-Telemetrie. Fehlende Modelle werden weiterhin über den Modell-Manager geladen; Silero VAD wird beim Start bei Bedarf automatisch heruntergeladen.
 
+## React Native für iPhone und Mac
+
+Die neue native Oberfläche liegt unter [`native/`](native/README.md). Sie übernimmt Flusstexts Farben, Typografie, Seiten und lokale Datenformate. Auf iPhone werden FastConformer Deutsch und Whisper Base empfohlen; größere technisch mögliche Modelle bleiben mit Ressourcenhinweisen auswählbar. Die bestehende Electron-App bleibt als eigener Desktop-Build erhalten.
+
 ## Entwicklung
 
 Voraussetzung ist Node.js **22.12 oder neuer**. Der Electron-Installer und electron-builder laufen nicht mehr mit Node 20.
