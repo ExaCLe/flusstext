@@ -142,7 +142,7 @@ export function Library(): ReactNode {
             {desktop ? 'Dateien hierher ziehen' : 'Dateien auswählen'}
           </T>
           <T size={13} color={c.muted} style={{ marginTop: 4, maxWidth: 384, textAlign: 'center', lineHeight: 19 }}>
-            {desktop ? 'oder klicken, um auszuwählen' : 'Tippen, um auszuwählen'} · MP3, WAV, M4A, MP4, MKV, OGG, FLAC und mehr
+            {desktop ? 'oder klicken, um auszuwählen' : 'Tippen, um auszuwählen'} · MP3, WAV, M4A, QTA, MP4, MKV, OGG, FLAC und mehr
           </T>
         </Pressable>
       ) : (

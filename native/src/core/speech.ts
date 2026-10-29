@@ -13,6 +13,7 @@ import { isSpeechWav, pcm16ToFloat } from './domain/wav'
 import { join, readRange, removePath, RNFS, readBinaryFile, serialized, toPath, wavInfo, writeWav, type AppPaths } from './fs'
 import type { NativeHost } from './host'
 import { engineCall } from './engine-call'
+import { decodeQta } from './decode'
 import { CancelledError, type AsrSpec, type CancelToken, type DiarizationSpec, type EngineSegment, type SpeechEngine, type SpeechResult, type TranscribeRequest } from './speech-types'
 
 /** Abschnittslänge: Whisper/NeMo bis 24 s, Nemotron bis 30 s (Modellgrenze 32 s). */
@@ -201,8 +202,9 @@ class DeviceSpeech implements SpeechEngine {
   }
 
   /** Beliebige Audiodatei in 16-kHz-Mono-WAV bringen (native Dekodierung von sherpa-onnx). */
-  private async prepare(path: string): Promise<{ path: string; temp: boolean }> {
+  private async prepare(path: string, token: CancelToken): Promise<{ path: string; temp: boolean }> {
     const local = toPath(path)
+    if (/\.qta$/i.test(local)) return decodeQta(this.paths, this.host, local, token)
     try {
       if (isSpeechWav(await wavInfo(local))) return { path: local, temp: false }
     } catch {
@@ -235,7 +237,7 @@ class DeviceSpeech implements SpeechEngine {
     const { token, asr } = req
     const progress = req.onProgress ?? (() => undefined)
     progress('decoding', 0)
-    const wav = await this.prepare(req.path)
+    const wav = await this.prepare(req.path, token)
     try {
       token.throwIfCancelled()
       const info = await wavInfo(wav.path)

@@ -2,6 +2,7 @@
 // Alle exportierten Methoden laufen auf dem Main-Thread; Dateikopien, WAV-Ausschnitte,
 // Engine-Prozesse und Sprechertrennung laufen auf Hintergrund-Queues. Events gehen über den Main-Thread.
 #import "FlusstextHost.h"
+#import "FlusstextAudioDecode.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <Metal/Metal.h>
@@ -234,6 +235,66 @@ static CGEventRef FTTapCallback(CGEventTapProxy proxy, CGEventType type, CGEvent
 
 #pragma mark - Modul
 
+/// Ein laufender decodeAudio-Aufruf. Genau eines von resolve/reject feuert: Abbruch lehnt sofort ab;
+/// nach `commit` (unmittelbar vor dem atomaren Umbenennen) ist kein Abbruch mehr möglich.
+@interface FTDecodeJob : NSObject
+@property(atomic) BOOL cancelled;
+@end
+
+@implementation FTDecodeJob {
+  RCTPromiseResolveBlock _resolve;
+  RCTPromiseRejectBlock _reject;
+  BOOL _settled;
+  BOOL _committed;
+}
+
+- (instancetype)initWithResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+  if ((self = [super init])) {
+    _resolve = [resolve copy];
+    _reject = [reject copy];
+  }
+  return self;
+}
+
+- (BOOL)cancel {
+  RCTPromiseRejectBlock reject;
+  @synchronized(self) {
+    if (_settled) return NO;
+    _settled = YES;
+    self.cancelled = YES;
+    reject = _reject;
+    _resolve = nil;
+    _reject = nil;
+  }
+  reject(@"E_CANCELLED", @"Abgebrochen", nil);
+  return YES;
+}
+
+- (BOOL)commit {
+  @synchronized(self) {
+    if (_settled) return NO;
+    _settled = _committed = YES;
+    return YES;
+  }
+}
+
+- (void)finishWithResult:(NSDictionary *)result error:(NSError *)error {
+  RCTPromiseResolveBlock resolve;
+  RCTPromiseRejectBlock reject;
+  @synchronized(self) {
+    if (_settled && !_committed) return;  // abgebrochen, schon abgelehnt
+    _settled = YES;
+    resolve = _resolve;
+    reject = _reject;
+    _resolve = nil;
+    _reject = nil;
+  }
+  if (result) return resolve(result);
+  reject(error.userInfo[FTDecodeCodeKey] ?: @"E_DECODE", error.localizedDescription ?: @"Audio konnte nicht dekodiert werden", error);
+}
+
+@end
+
 @interface FlusstextHost () <AVAudioRecorderDelegate
 #if !TARGET_OS_OSX
                              , UIDocumentPickerDelegate, UIDocumentInteractionControllerDelegate
@@ -264,6 +325,8 @@ static CGEventRef FTTapCallback(CGEventTapProxy proxy, CGEventType type, CGEvent
   // Engine
   NSMutableDictionary<NSString *, id> *_engineCalls;  // macOS: NSTask, iOS: Reject-Block
   NSMutableSet<NSString *> *_cancelledCalls;
+  NSMutableDictionary<NSString *, FTDecodeJob *> *_decodeCalls;  // beide Plattformen, getrennt von _engineCalls
+  dispatch_queue_t _decodeQueue;
 
 #if TARGET_OS_OSX
   NSPanel *_pill;
@@ -302,6 +365,8 @@ RCT_EXPORT_MODULE(FlusstextHost)
     _engineQueue = dispatch_queue_create("de.flusstext.host.engine", dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_UTILITY, 0));
     _engineCalls = [NSMutableDictionary new];
     _cancelledCalls = [NSMutableSet new];
+    _decodeCalls = [NSMutableDictionary new];
+    _decodeQueue = dispatch_queue_create("de.flusstext.host.decode", dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_UTILITY, 0));
 #if TARGET_OS_OSX
     _pressed = [NSMutableSet new];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(onFileDrop:) name:@"FlusstextFileDrop" object:nil];
@@ -346,6 +411,12 @@ RCT_EXPORT_MODULE(FlusstextHost)
 #endif
     [_engineCalls removeAllObjects];
   }
+  NSArray<FTDecodeJob *> *decodes;
+  @synchronized(_decodeCalls) {
+    decodes = _decodeCalls.allValues;
+    [_decodeCalls removeAllObjects];
+  }
+  for (FTDecodeJob *job in decodes) [job cancel];
   [NSNotificationCenter.defaultCenter removeObserver:self];
   [super invalidate];
 }
@@ -451,7 +522,14 @@ RCT_EXPORT_METHOD(requestMicrophone : (RCTPromiseResolveBlock)resolve reject : (
 #endif
 
 - (NSArray<UTType *> *)pickTypes {
-  return @[ UTTypeAudio, UTTypeMovie, UTTypeAudiovisualContent ];
+  NSMutableArray<UTType *> *types = [@[ UTTypeAudio, UTTypeMovie, UTTypeAudiovisualContent ] mutableCopy];
+  // QuickTime Audio (.qta, z. B. Sprachmemos): ältere Systeme kennen den Typ nicht als public.audio.
+  // Ohne Deklaration liefert die Endung einen dynamischen Typ, der nur .qta-Dateien zulässt.
+  UTType *qta = [UTType typeWithIdentifier:@"com.apple.quicktime-audio"];
+  if (qta) [types addObject:qta];
+  UTType *qtaByExtension = [UTType typeWithFilenameExtension:@"qta"];
+  if (qtaByExtension && ![qtaByExtension isEqual:qta]) [types addObject:qtaByExtension];
+  return types;
 }
 
 RCT_EXPORT_METHOD(pickFiles : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject) {
@@ -1220,6 +1298,16 @@ static NSString *FTCallId(id params) {
 
 - (void)cancelEngine:(id)params resolve:(RCTPromiseResolveBlock)resolve {
   NSString *only = [params isKindOfClass:NSDictionary.class] && [params[@"requestId"] isKindOfClass:NSString.class] ? params[@"requestId"] : nil;
+  NSMutableArray<FTDecodeJob *> *decodes = [NSMutableArray new];
+  @synchronized(_decodeCalls) {
+    for (NSString *key in _decodeCalls.allKeys) {
+      if (only && ![key isEqualToString:only]) continue;
+      [decodes addObject:_decodeCalls[key]];
+      [_decodeCalls removeObjectForKey:key];
+    }
+  }
+  NSUInteger decodesCancelled = 0;
+  for (FTDecodeJob *job in decodes) if ([job cancel]) decodesCancelled++;
   NSMutableArray *victims = [NSMutableArray new];
   @synchronized(_engineCalls) {
     for (NSString *key in _engineCalls.allKeys) {
@@ -1249,7 +1337,34 @@ static NSString *FTCallId(id params) {
     [_cancelledCalls removeAllObjects];
   }
 #endif
-  resolve(@(victims.count));
+  resolve(@(victims.count + decodesCancelled));
+}
+
+/// decodeAudio {path, outputPath, requestId?}: beliebige AVFoundation-Audiodatei (u. a. .qta) nach
+/// 16 kHz/mono/16 Bit WAV. Läuft nativ auf macOS und iOS; die Eingabe bleibt unverändert.
+- (void)decodeAudio:(id)params resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+  NSDictionary *p = [params isKindOfClass:NSDictionary.class] ? params : @{};
+  NSString *path = [p[@"path"] isKindOfClass:NSString.class] ? p[@"path"] : nil;
+  NSString *outputPath = [p[@"outputPath"] isKindOfClass:NSString.class] ? p[@"outputPath"] : nil;
+  if (!path.length || !outputPath.length) return reject(@"E_PARAMS", @"decodeAudio braucht path und outputPath", nil);
+  NSString *callId = FTCallId(p);
+  FTDecodeJob *job = [[FTDecodeJob alloc] initWithResolve:resolve reject:reject];
+  NSMutableDictionary *calls = _decodeCalls;
+  @synchronized(calls) {
+    if (calls[callId]) return reject(@"E_BUSY", [@"decodeAudio läuft bereits für requestId " stringByAppendingString:callId], nil);
+    calls[callId] = job;
+  }
+  dispatch_async(_decodeQueue, ^{
+    NSError *error = nil;
+    NSDictionary *result = nil;
+    if (!job.cancelled) {
+      result = FTDecodeAudioFile(path, outputPath, ^BOOL { return job.cancelled; }, ^BOOL { return [job commit]; }, &error);
+    }
+    @synchronized(calls) {
+      if (calls[callId] == job) [calls removeObjectForKey:callId];
+    }
+    [job finishWithResult:result error:error];
+  });
 }
 
 #if TARGET_OS_OSX
@@ -1383,10 +1498,11 @@ static id FTParseEngineOutput(NSData *data) {
 }
 #endif
 
-/// macOS: alle Methoden gehen an den gebündelten Node-Runner. iOS: nativ nur `diarize` (sherpa-onnx C-API).
-/// `cancel` beendet laufende Aufrufe (optional nur params.requestId).
+/// Beide Plattformen nativ: `decodeAudio` (AVFoundation). Sonst macOS: gebündelter Node-Runner;
+/// iOS: nativ nur `diarize` (sherpa-onnx C-API). `cancel` beendet laufende Aufrufe (optional nur params.requestId).
 RCT_EXPORT_METHOD(engineCall : (NSString *)method params : (id)params resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject) {
   if ([method isEqualToString:@"cancel"]) return [self cancelEngine:params resolve:resolve];
+  if ([method isEqualToString:@"decodeAudio"]) return [self decodeAudio:params resolve:resolve reject:reject];
 #if TARGET_OS_OSX
   [self runEngine:method params:params resolve:resolve reject:reject];
 #else
@@ -1400,7 +1516,7 @@ RCT_EXPORT_METHOD(engineCall : (NSString *)method params : (id)params resolve : 
   }
 #endif
   reject(@"E_ENGINE_UNSUPPORTED",
-         [NSString stringWithFormat:@"engineCall('%@') ist auf iOS nicht nativ verfügbar. Unterstützt: diarize, cancel. Transkription läuft hier über whisper.rn bzw. react-native-sherpa-onnx in JavaScript.", method],
+         [NSString stringWithFormat:@"engineCall('%@') ist auf iOS nicht nativ verfügbar. Unterstützt: decodeAudio, diarize, cancel. Transkription läuft hier über whisper.rn bzw. react-native-sherpa-onnx in JavaScript.", method],
          nil);
 #endif
 }

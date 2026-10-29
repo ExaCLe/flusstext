@@ -4,7 +4,7 @@ root = File.expand_path('..', __dir__)
   project = Xcodeproj::Project.open(File.join(root, platform, 'FlusstextNative.xcodeproj'))
   target = project.targets.find { |t| t.name == (platform == 'ios' ? 'FlusstextNative' : 'FlusstextNative-macOS') }
   group = project.main_group.groups.find { |g| g.name == 'Flusstext host' } || project.main_group.new_group('Flusstext host', '../apple')
-  files = %w[FlusstextHost.h FlusstextHost.mm]
+  files = %w[FlusstextHost.h FlusstextHost.mm FlusstextAudioDecode.h]
   files += %w[FlusstextDiarize.h FlusstextDiarize.cpp] if platform == 'ios'
   files.each do |file|
     ref = group.files.find { |f| f.path == file } || group.new_file(file)
@@ -20,7 +20,7 @@ root = File.expand_path('..', __dir__)
     s = config.build_settings
     s['PRODUCT_NAME'] = 'Flusstext'
     s['PRODUCT_BUNDLE_IDENTIFIER'] = platform == 'ios' ? 'de.flusstext.native.ios' : 'de.flusstext.native.macos'
-    s['MARKETING_VERSION'] = '0.1.2'
+    s['MARKETING_VERSION'] = '0.1.3'
     s['CURRENT_PROJECT_VERSION'] = '1'
     s['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
     if platform == 'ios'

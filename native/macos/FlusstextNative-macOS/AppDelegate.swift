@@ -112,7 +112,7 @@ final class FileDropView: NSView {
   private func files(_ sender: NSDraggingInfo) -> [URL] {
     (sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []).filter {
       let type = try? $0.resourceValues(forKeys: [.contentTypeKey]).contentType
-      return type?.conforms(to: .audio) == true || type?.conforms(to: .movie) == true
+      return type?.conforms(to: .audio) == true || type?.conforms(to: .movie) == true || $0.pathExtension.lowercased() == "qta"
     }
   }
   override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { files(sender).isEmpty ? [] : .copy }

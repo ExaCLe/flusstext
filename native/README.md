@@ -2,6 +2,12 @@
 
 Native iPhone and macOS apps using Flusstext's existing design, German interface, model catalog and JSON transcript format. The Electron target remains separate.
 
+## Version 0.1.3: QuickTime Audio
+
+Apple QuickTime Audio (`.qta`), including Voice Memos AAC/APAC representations, is decoded locally through AVFoundation to a temporary 16 kHz mono PCM WAV before recognition. The original stays intact. The decoder chooses the AAC presentation track when available and falls back to a native-decodable track, including APAC; it does not combine alternate representations or independently transcribe stems. Unsupported codecs on an older Apple OS produce an explicit error. QTA stays selectable in the picker and Mac drag and drop.
+
+Native test helpers in `tests/apple/` generate genuine QTA containers through AVAssetWriter and exercise the production decoder header; they are separate from the in-memory Node tests. Synthetic QTA fixtures are not a real Voice Memos export or physical iPhone proof.
+
 ## Models
 
 On iPhone, FastConformer Deutsch and Whisper Base are recommended for smaller downloads and lower resource use. Every other speech, segmentation and speaker model remains selectable. Large models show resource guidance; slow execution is not treated as incompatibility. Windows EXE runtimes are omitted.
@@ -67,6 +73,8 @@ node scripts/package-mac.cjs --identity 'Developer ID Application: Your Name (YO
 ```
 
 The packager signs nested native executables and frameworks before the app, notarizes and staples the app, then creates, signs, notarizes and staples the DMG. Both app and DMG must pass Gatekeeper checks. Credentials and private keys must stay outside this repository. `--local` produces an explicitly UNNOTARIZED package for local verification only.
+
+`--sign-only --identity 'Developer ID Application: …'` prepares and verifies the signed app while Apple account authentication is being configured. That artifact is not notarized and is not a completed trusted download.
 
 The iOS Podfile pins ONNX Runtime 1.24.2 to match the implementation embedded in sherpa's prebuilt library. An unconstrained newer header requests an unsupported C API and crashes before launch. The iPhone target also adopts UIScene, required by iOS 27.
 

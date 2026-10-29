@@ -12,7 +12,7 @@ import type { NativeHost } from './host'
 import type { SettingsStore } from './settings'
 
 const MARKER = '.complete'
-const USER_AGENT = 'Flusstext/0.1.2 (React Native)'
+const USER_AGENT = 'Flusstext/0.1.3 (React Native)'
 
 interface ActiveDownload extends DownloadProgress {
   abort: AbortController

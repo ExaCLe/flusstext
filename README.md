@@ -74,3 +74,5 @@ src/shared/    Typen, Modellkatalog, Tastennamen
 - **Lange Aufnahmen:** Silero VAD teilt sie in Abschnitte von höchstens 24 s. Bei Bedarf werden die Abschnitte über Wort-Zeitstempel den Sprechern aus der Diarisierung zugeordnet.
 - **Sprechererkennung:** Die Clustering-Schwellwerte sind pro Stimmprofil-Modell kalibriert (`EMBEDDING_THRESHOLDS` in `src/shared/catalog.ts`). Kalibriert wurde auf deutschen 2- und 3-Personen-Gesprächen sowie den sherpa-onnx-Testaufnahmen mit 2 und 4 Sprechern. Sprecher mit weniger als 2 s Redezeit werden dem Nachbarn zugeordnet.
 - **Whisper:** läuft als dauerhaft geladener `whisper-server.exe` (CUDA 12) auf localhost. Das hält die Diktat-Latenz auf der GPU bei unter einer Sekunde.
+
+React Native version 0.1.3 adds local Apple QuickTime Audio (`.qta`, AAC/APAC) decoding on iPhone and Mac. See [native/README.md](native/README.md) for signing, TestFlight and native verification commands.

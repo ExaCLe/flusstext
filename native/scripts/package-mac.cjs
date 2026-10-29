@@ -12,7 +12,9 @@ function option(name) { const i = args.indexOf(name); return i < 0 ? undefined :
 const identity = option('--identity')
 const profile = option('--notary-profile')
 const local = args.includes('--local')
-if (!local && (!identity || !identity.startsWith('Developer ID Application:') || !profile)) {
+const signOnly = args.includes('--sign-only')
+if (local && signOnly) throw new Error('--sign-only requires a Developer ID identity.')
+if (!local && (!identity || !identity.startsWith('Developer ID Application:') || (!profile && !signOnly))) {
   throw new Error('Distribution requires --identity "Developer ID Application: …" --notary-profile <Keychain profile>. Use --local only for an explicitly unnotarized test build.')
 }
 const run = (bin, argv) => execFileSync(bin, argv, { stdio: 'inherit' })
@@ -50,6 +52,13 @@ for (const file of executables) sign(file, /\/engine\/node$/.test(file) ? entitl
 for (const bundle of bundles) sign(bundle)
 sign(app, entitlements)
 run('/usr/bin/codesign', ['--verify', '--deep', '--strict', '--verbose=2', app])
+if (signOnly) {
+  const prepared = path.join(out, `Flusstext-${version}-signed`)
+  if (fs.existsSync(prepared)) throw new Error(`Refusing to overwrite ${prepared}`)
+  fs.renameSync(stage, prepared)
+  console.log(`Developer ID signed app: ${path.join(prepared, 'Flusstext.app')}. NOT NOTARIZED; do not distribute as a trusted download yet.`)
+  process.exit(0)
+}
 if (!local) {
   const zip = path.join(out, 'Flusstext-notarization.zip')
   run('/usr/bin/ditto', ['-c', '-k', '--keepParent', app, zip])

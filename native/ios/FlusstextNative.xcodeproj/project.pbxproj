@@ -19,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0321430A88129A7097A77A5E /* FlusstextAudioDecode.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = FlusstextAudioDecode.h; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* FlusstextNative.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlusstextNative.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = FlusstextNative/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = FlusstextNative/Info.plist; sourceTree = "<group>"; };
@@ -56,6 +57,7 @@
 				CEE6F907D4BDF473D6A6AC8F /* FlusstextHost.mm */,
 				77A929F57AD88BBEE840B48B /* FlusstextDiarize.h */,
 				7C81CB336519A7964A9258F6 /* FlusstextDiarize.cpp */,
+				0321430A88129A7097A77A5E /* FlusstextAudioDecode.h */,
 			);
 			name = "Flusstext host";
 			path = ../apple;
@@ -311,7 +313,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 0.1.3;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -345,7 +347,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 0.1.3;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
