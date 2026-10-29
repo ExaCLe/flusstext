@@ -134,6 +134,7 @@ export async function resolveAsr(modelId: string, language: string): Promise<Asr
   if (!def || def.kind !== 'asr') throw new Error('Unbekanntes Modell')
   if (!isInstalled(modelId)) throw new Error(`${def.name} ist nicht installiert.`)
   const s = settings.get()
+  if (def.engine === 'onnx') return { type: 'nemotron-lite', modelDir: modelPath(modelId), threads: s.threads, family: def.family }
   if (def.engine === 'whispercpp') {
     const url = await ensureWhisperServer(modelId, s)
     return { type: 'whisper-server', url, language: language === 'auto' ? 'auto' : language, family: 'whisper' }

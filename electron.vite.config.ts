@@ -11,7 +11,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve('src/main/index.ts'),
-          engine: resolve('src/engine/index.ts')
+          engine: resolve('src/engine/index.ts'),
+          'nemotron-worker': resolve('src/engine/nemotron-worker.ts')
         }
       }
     }

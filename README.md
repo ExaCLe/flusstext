@@ -18,6 +18,7 @@ Alle Modelle sind frei nutzbar (nicht-kommerziell und überwiegend auch kommerzi
 | Modell | Engine | Größe | Deutsch | Lizenz |
 |---|---|---|---|---|
 | **Parakeet TDT 0.6B v3** (Standard) | sherpa-onnx, CPU | 487 MB | sehr gut, 25 Sprachen | CC-BY-4.0 |
+| Nemotron 3.5 Transcribe Lite (experimentell) | ONNX Runtime, CPU | ca. 700 MB | experimentell | OpenMDW-1.1 |
 | FastConformer Deutsch | sherpa-onnx, CPU | 108 MB | gut, extrem schnell | CC-BY-4.0 |
 | Canary 180M Flash | sherpa-onnx, CPU | 154 MB | sehr gut (de/en/es/fr) | CC-BY-4.0 |
 | Cohere Transcribe (2B) | sherpa-onnx, CPU | 1,7 GB | sehr gut, langsam | Apache-2.0 |
@@ -28,6 +29,10 @@ Alle Modelle sind frei nutzbar (nicht-kommerziell und überwiegend auch kommerzi
 | Silero VAD | sherpa-onnx | 1 MB | Sprachaktivität | MIT |
 
 Die Modelle liegen unter `%LOCALAPPDATA%\Flusstext\models`, Transkripte und Aufnahmen unter `%APPDATA%\Flusstext`.
+
+**Nemotron Lite:** Unter „Modelle“ lässt sich die Variante aus Sprachencoder und CTC-Kopf herunterladen und für Dateien, Aufnahmen oder Diktat auswählen. Das große 30B-Sprachmodell ist nicht enthalten. Der INT8-Export läuft auch ohne NVIDIA-Grafikkarte auf der CPU; Sprecher werden mit den bereits ausgewählten lokalen Diarisierungsmodellen zugeordnet. Die Erkennung ist gröber als beim vollständigen NVIDIA-Modell. Deutsch und weitere Sprachen gelten weiterhin als experimentell; kurze englische und deutsche Aufnahmen wurden als Funktionstest geprüft. Die Apple-Demogeschwindigkeit wird für Windows nicht versprochen.
+
+Modell und Vokabular werden nur aus lokalen Dateien geladen. Die ONNX-Laufzeit läuft in einem eigenen Prozess mit deaktivierter Netzwerk-Telemetrie und explizit lokalem CPU-Provider. Modelldownloads erfolgen über den bestehenden Modell-Manager und werden mit SHA-256 geprüft. Herkunft, Lizenz und reproduzierbare Exportanleitung stehen in [`scripts/nemotron-lite/README.md`](scripts/nemotron-lite/README.md).
 
 ## Downloads im Firmennetz
 
@@ -46,6 +51,7 @@ npm install
 npm run dev        # App mit Hot-Reload starten
 npm run typecheck
 npm run test:downloads # Electron-Integrationstests mit lokalem PAC-/Proxyserver
+npm run test:nemotron  # CTC-/Frontend-Tests, optional mit echtem lokalem Modell
 npm run dist       # Windows-Installer nach dist/ bauen
 ```
 

@@ -12,6 +12,7 @@ files:
     filter: [icon.png]
   - '!**/*.map'
 asarUnpack:
+  - node_modules/onnxruntime-web/**
   - node_modules/sherpa-onnx-*/**
   - node_modules/ffmpeg-static/**
   - node_modules/uiohook-napi/**

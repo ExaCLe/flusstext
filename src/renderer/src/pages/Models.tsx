@@ -47,6 +47,7 @@ function ModelCard({ m, roles }: { m: ModelStatus; roles: { transcription: boole
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="mr-1 text-[15px] font-semibold tracking-tight">{m.name}</span>
+            {m.experimental && <Badge tone="warning">Experimentell</Badge>}
             {m.recommended && (
               <Badge tone="accent">
                 <Sparkles /> Empfohlen
@@ -86,7 +87,7 @@ function ModelCard({ m, roles }: { m: ModelStatus; roles: { transcription: boole
         {m.kind === 'asr' && (
           <>
             <Meter label="Geschwindigkeit" value={m.speed} />
-            <Meter label="Genauigkeit (DE)" value={m.accuracy} />
+            {m.experimental ? <span className="text-[12px] text-muted">Deutsch noch nicht bewertet</span> : <Meter label="Genauigkeit (DE)" value={m.accuracy} />}
           </>
         )}
       </div>
@@ -101,7 +102,7 @@ function ModelCard({ m, roles }: { m: ModelStatus; roles: { transcription: boole
           <Scale className="size-3.5" /> {m.license}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Cpu className="size-3.5" /> {m.engine === 'whispercpp' ? 'whisper.cpp' : 'sherpa-onnx'}
+          <Cpu className="size-3.5" /> {m.engine === 'whispercpp' ? 'whisper.cpp' : m.engine === 'onnx' ? 'ONNX Runtime · CPU' : 'sherpa-onnx'}
         </span>
         <button className="inline-flex items-center gap-1 hover:text-fg" onClick={() => window.api.system.openExternal(m.source)}>
           Quelle <ExternalLink className="size-3" />

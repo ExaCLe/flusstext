@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { spawn } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { createReadStream, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { CATALOG } from '@shared/catalog'
 import type { DownloadProgress, ModelDef, ModelStatus } from '@shared/types'
@@ -101,12 +102,20 @@ class ModelManager extends EventEmitter {
         for (const f of def.files) {
           const target = join(dir, f.name)
           if (existsSync(target) && f.size && statSync(target).size === f.size) {
-            tick(f.size)
-            continue
+            if (!f.sha256 || await matchesHash(target, f.sha256)) {
+              tick(f.size)
+              continue
+            }
+            rmSync(target, { force: true })
           }
           await fetchTo(f.url, target, abort.signal, tick)
+          if (f.sha256 && !await matchesHash(target, f.sha256)) {
+            rmSync(target, { force: true })
+            throw new Error('Die Prüfsumme der Modelldatei stimmt nicht. Bitte erneut herunterladen.')
+          }
         }
       }
+      abort.signal.throwIfAborted()
       writeFileSync(join(dir, MARKER), new Date().toISOString())
       this.downloads.delete(id)
       this.autoSelect(def)
@@ -194,3 +203,9 @@ export function hoistSingleFolder(dir: string): void {
 }
 
 export const models = new ModelManager()
+
+async function matchesHash(file: string, expected: string): Promise<boolean> {
+  const hash = createHash('sha256')
+  for await (const chunk of createReadStream(file)) hash.update(chunk)
+  return hash.digest('hex') === expected
+}

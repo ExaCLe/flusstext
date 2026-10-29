@@ -4,6 +4,7 @@
 export type AsrBackend =
   | { type: 'sherpa'; key: string; config: Record<string, unknown>; family: string }
   | { type: 'whisper-server'; url: string; language: string; family: string }
+  | { type: 'nemotron-lite'; modelDir: string; threads: number; family: string }
 
 export interface DiarizationSpec {
   segmentation: string

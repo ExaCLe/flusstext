@@ -44,7 +44,7 @@ export interface Settings {
 }
 
 export type ModelKind = 'asr' | 'segmentation' | 'embedding' | 'vad' | 'runtime'
-export type EngineKind = 'sherpa' | 'whispercpp'
+export type EngineKind = 'sherpa' | 'whispercpp' | 'onnx'
 
 export interface ModelFile {
   /** Dateiname im Modellordner */
@@ -52,6 +52,8 @@ export interface ModelFile {
   url: string
   /** Größe in Bytes (für Fortschrittsanzeige, optional) */
   size?: number
+  /** SHA-256 für veröffentlichte Modellartefakte. */
+  sha256?: string
 }
 
 export interface ModelDef {
@@ -71,6 +73,7 @@ export interface ModelDef {
   license: string
   source: string
   recommended?: boolean
+  experimental?: boolean
   /** Für Diktat besonders geeignet (schnell) */
   dictation?: boolean
   gpu?: boolean

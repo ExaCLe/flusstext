@@ -3,3 +3,5 @@ out/
 dist/
 *.log
 .vite/
+__pycache__/
+.venv-export/

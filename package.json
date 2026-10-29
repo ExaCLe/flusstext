@@ -1,7 +1,7 @@
 {
   "name": "flusstext",
   "productName": "Flusstext",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lokale Transkription & Diktat mit Open-Source-Modellen",
   "main": "./out/main/index.js",
   "author": "ExaCLe",
@@ -15,11 +15,13 @@
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test:downloads": "electron scripts/test-downloads.cjs",
+    "test:nemotron": "node --test scripts/test-nemotron.cjs",
     "dist": "electron-vite build && electron-builder --win"
   },
   "dependencies": {
     "docx": "^9.13.0",
     "ffmpeg-static": "^5.3.0",
+    "onnxruntime-web": "1.22.0",
     "sherpa-onnx-node": "^1.13.8",
     "uiohook-napi": "^1.5.5"
   },

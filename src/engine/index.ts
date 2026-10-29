@@ -2,6 +2,7 @@
 // Abstürze oder lange Berechnungen nie das UI blockieren.
 import { spawn } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
+import { preloadNemotron, recognizeNemotron, stopNemotron } from './nemotron-client'
 import type {
   AsrBackend,
   DiarizationSpec,
@@ -79,6 +80,7 @@ interface Token {
 /** Einen kurzen Abschnitt (≤ 30 s) erkennen und als Token-Liste mit absoluten Zeiten liefern. */
 async function recognize(asr: AsrBackend, samples: Float32Array, offset: number): Promise<Token[]> {
   const dur = samples.length / SR
+  if (asr.type === 'nemotron-lite') return recognizeNemotron(asr, samples, offset)
   if (asr.type === 'sherpa') {
     const rec = await getRecognizer(asr)
     const stream = rec.createStream()
@@ -401,7 +403,8 @@ async function transcribeFile(p: TranscribeFileParams): Promise<{ segments: Engi
   }
 
   // Modell parallel zum Dekodieren laden
-  const loading = p.asr.type === 'sherpa' ? getRecognizer(p.asr) : Promise.resolve()
+  const loading = p.asr.type === 'sherpa' ? getRecognizer(p.asr) : p.asr.type === 'nemotron-lite' ? preloadNemotron(p.asr) : Promise.resolve()
+  void loading.catch(() => {}) // The load is awaited after audio decoding; observe early failures immediately.
   progress('decoding', 0)
   const samples = await decodeFile(p.ffmpeg, p.path, (x) => progress('decoding', x), isCancelled)
   const duration = samples.length / SR
@@ -633,9 +636,11 @@ const handlers: Record<string, (params: never) => unknown> = {
   ping: () => 'pong',
   preload: async (p: { asr: AsrBackend }) => {
     if (p.asr.type === 'sherpa') await getRecognizer(p.asr)
+    if (p.asr.type === 'nemotron-lite') await preloadNemotron(p.asr)
     return true
   },
   unload: (p: { key?: string }) => {
+    stopNemotron()
     if (p.key) recognizers.delete(p.key)
     else recognizers.clear()
     return true

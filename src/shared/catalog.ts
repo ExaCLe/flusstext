@@ -6,6 +6,7 @@ const SHERPA_SEG = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/spea
 const SHERPA_EMB = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models'
 const GGML = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main'
 const WHISPER_CPP = 'https://github.com/ggml-org/whisper.cpp/releases/download/b5454'
+const NEMOTRON_LITE = 'https://github.com/ExaCLe/flusstext/releases/download/nemotron-lite-onnx-v1'
 
 /**
  * Clustering-Schwellwerte je Stimmprofil-Modell. Kalibriert auf deutschen 2- und 3-Personen-Gesprächen
@@ -24,6 +25,33 @@ const EMBEDDING_THRESHOLDS: Record<string, number> = {
 const RECOMMENDED_EMBEDDING = 'emb-eres2net-voxceleb'
 
 export const CATALOG: ModelDef[] = [
+  {
+    id: 'nemotron-3.5-transcribe-lite',
+    name: 'Nemotron 3.5 Transcribe Lite',
+    family: 'nemotron-lite',
+    kind: 'asr',
+    engine: 'onnx',
+    description: 'Kompakte Variante ohne das große Sprachmodell. Läuft vollständig lokal auf der CPU, mit Wort-Zeitstempeln und der gewählten Sprechererkennung. Englisch geprüft; Deutsch und weitere Sprachen experimentell.',
+    sizeMB: 700,
+    speed: 2,
+    accuracy: 0,
+    languages: 'Englisch; weitere Sprachen experimentell',
+    license: 'OpenMDW-1.1',
+    source: 'https://huggingface.co/FluidInference/nemotron-3.5-transcribe-lite-coreml',
+    experimental: true,
+    files: ([
+      ['encoder.int8.onnx', 637430704, '7efabc1252087f9799998c2f254f8c88ee27acc90536cb3d0232589ad3ce30cd'],
+      ['ctc.int8.onnx', 62068283, '7a8aac59e9d325cd89127a0eb11159ce041954b01a47fae29538b0b4f3bf12d4'],
+      ['mel-filterbank.bin', 131584, 'eb5cf9eb93b8038062ebc849b14ec85098abe1c915bc22262be8ad336bcf563a'],
+      ['mel-window.bin', 1600, '6a66c2c694505b41b8987c4885a618e1a32612b43a4935a208a3c9c956b22d02'],
+      ['vocab.json', 223876, '58990a54bbc4b786bda94fa20aa491b1d8f0f58b14f1343d42d510117b3c0d0c'],
+      ['config.json', 340, 'ff3e9753f510e16e29e0db67be68d7e5cb1c4ba967d9101e1f4b7cadfdfa26e8'],
+      ['LICENSE-OpenMDW.txt', 2694, '18c3a96fd1ee779263aa9210e3d962d5899511890254f3f3efd70ece81d89866'],
+      ['LICENSE-NeMo.txt', 11357, 'c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4'],
+      ['NOTICE-NVIDIA.txt', 2305, 'd61d7ca8e896ccc5de6573ce75cc91335fe7460718b8cd84a8f1312fd5b1b72c']
+    ] as const).map(([name, size, sha256]) => ({ name, size, sha256, url: `${NEMOTRON_LITE}/${name}` })),
+    requires: ['vad-silero']
+  },
   // ------------------------------------------------------------ Spracherkennung (sherpa-onnx, CPU)
   {
     id: 'parakeet-tdt-0.6b-v3',
