@@ -2,7 +2,7 @@
 
 # Flusstext
 
-Lokale Transkription und Diktat für Windows: eine Electron-App mit deutscher Oberfläche, die ausschließlich Open-Source-Modelle offline nutzt.
+Lokale Transkription und Diktat für Windows und macOS: eine Electron-App mit deutscher Oberfläche, die ausschließlich Open-Source-Modelle offline nutzt.
 
 - **Diktat überall (wie Wispr Flow):** `Strg` + `Win` halten, sprechen, loslassen, und der Text wird ins aktive Textfeld eingefügt. Kurz antippen startet freihändiges Diktat. `Esc` bricht ab, `Alt` + `Umschalt` + `Z` fügt das letzte Diktat erneut ein. Die Zwischenablage wird danach wiederhergestellt. Eine schmale Pille unten am Bildschirm startet das Diktat auch per Klick.
 - **Dateien transkribieren:** Audio und Video lassen sich per Drag & Drop hinzufügen und werden über eine Warteschlange verarbeitet. Das Ergebnis enthält satzweise Zeitstempel und Sprechererkennung (Diarisierung).
@@ -10,6 +10,18 @@ Lokale Transkription und Diktat für Windows: eine Electron-App mit deutscher Ob
 - **Transkript-Ansicht:** Wellenform in Sprecherfarben, Wort-für-Wort-Hervorhebung beim Abspielen, Redeanteile, Notizen und Lesezeichen. Sätze per Doppelklick bearbeiten, Absätze anderen Sprechern zuordnen, Sprecher umbenennen oder zusammenführen. Export nach Word, TXT, Markdown, SRT, VTT und JSON.
 - **Volltextsuche** über alle Transkripte (`Strg` + `K`), Diktat-Verlauf und Wörterbuch für Namen und Fachbegriffe.
 - **Modell-Manager:** Download mit Fortschritt; die whisper.cpp-GPU-Laufzeit wird automatisch mitinstalliert.
+
+## Installation auf dem Mac
+
+Die macOS-Ausgabe von **0.1.2** ist ein direkter Download für **Apple Silicon (M1 oder neuer)**. App Store und TestFlight werden nicht benötigt. Das DMG aus [Release 0.1.2](https://github.com/ExaCLe/flusstext/releases/tag/v0.1.2) öffnen, **Flusstext.app** nach **Programme** ziehen und dort starten.
+
+Der persönliche Build ist ad hoc signiert, aber nicht mit einer Apple Developer ID signiert oder notarisiert. macOS kann deshalb beim ersten Öffnen blockieren. Nach einem Öffnungsversuch unter **Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen** freigeben. Diese Freigabe gilt nur für Flusstext; Gatekeeper muss nicht abgeschaltet werden.
+
+- **Mikrofon:** Den Zugriff beim ersten Aufnahmeversuch erlauben. Später unter Systemeinstellungen › Datenschutz & Sicherheit › Mikrofon ändern.
+- **Globales Diktat:** Im Menü **Flusstext › Diktat-Zugriff erlauben …** die Bedienungshilfen öffnen und Flusstext erlauben. Danach zur App zurückkehren. Falls macOS zusätzlich nach Eingabeüberwachung fragt, auch diese für Flusstext erlauben und die App neu starten. Datei-Transkription funktioniert ohne diese Tastaturberechtigung.
+- **Tasten:** Standard ist **Control + Command** zum Diktieren. Einfügen verwendet **Command + V**, die Suche **Command + K**. Die Kombinationen für Diktat lassen sich wie unter Windows ändern.
+- **Whisper:** Die native CPU-/Metal-Laufzeit ist enthalten. Es werden keine Windows- oder CUDA-Laufzeiten heruntergeladen. Modelle werden weiterhin über den Modell-Manager installiert. „GPU verwenden“ schaltet für Whisper Metal ein oder aus.
+- **Daten:** Modelle, Transkripte und Einstellungen liegen unter `~/Library/Application Support/Flusstext/`. Intel-Macs sind mit diesem Installer nicht abgedeckt.
 
 ## Modelle
 
@@ -53,7 +65,11 @@ npm run typecheck
 npm run test:downloads # Electron-Integrationstests mit lokalem PAC-/Proxyserver
 npm run test:nemotron  # CTC-/Frontend-Tests, optional mit echtem lokalem Modell
 npm run dist       # Windows-Installer nach dist/ bauen
+npm run dist:mac   # Auf Apple Silicon: macOS-DMG nach dist/ bauen
+npm run test:platform # Plattform-Grenzen und Berechtigungsverhalten prüfen
 ```
+
+Für den Mac-Build werden zusätzlich Xcode Command Line Tools und CMake benötigt. `dist:mac` baut whisper.cpp **b5454** aus dem festgelegten Commit mit geprüftem SHA-256, statischen Bibliotheken und eingebetteten Metal-Kernels. Der Build läuft mit `nice -n 10` und höchstens der Hälfte der verfügbaren CPU-Kerne. CMake oder Homebrew sind auf dem Ziel-Mac nicht erforderlich. Das DMG bleibt ad hoc signiert; für eine notarisierte Veröffentlichung werden separate Developer-ID-Zugangsdaten benötigt.
 
 ## Architektur
 
@@ -69,4 +85,4 @@ src/shared/    Typen, Modellkatalog, Tastennamen
 - **Audio:** ffmpeg (ffmpeg-static) dekodiert Dateien zu 16 kHz Mono. Mikrofonaufnahmen laufen über ein AudioWorklet.
 - **Lange Aufnahmen:** Silero VAD teilt sie in Abschnitte von höchstens 24 s. Bei Bedarf werden die Abschnitte über Wort-Zeitstempel den Sprechern aus der Diarisierung zugeordnet.
 - **Sprechererkennung:** Die Clustering-Schwellwerte sind pro Stimmprofil-Modell kalibriert (`EMBEDDING_THRESHOLDS` in `src/shared/catalog.ts`). Kalibriert wurde auf deutschen 2- und 3-Personen-Gesprächen sowie den sherpa-onnx-Testaufnahmen mit 2 und 4 Sprechern. Sprecher mit weniger als 2 s Redezeit werden dem Nachbarn zugeordnet.
-- **Whisper:** läuft als dauerhaft geladener `whisper-server.exe` (CUDA 12) auf localhost. Das hält die Diktat-Latenz auf der GPU bei unter einer Sekunde.
+- **Whisper:** läuft als dauerhaft geladener lokaler Server: `whisper-server.exe` mit CUDA 12 unter Windows, gebündelter `whisper-server` mit Metal oder CPU auf macOS. Das hält die Diktat-Latenz auf der GPU bei unter einer Sekunde.

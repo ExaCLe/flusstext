@@ -16,7 +16,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test:downloads": "electron scripts/test-downloads.cjs",
     "test:nemotron": "node --test scripts/test-nemotron.cjs",
-    "dist": "electron-vite build && electron-builder --win"
+    "dist": "electron-vite build && electron-builder --win",
+    "dist:mac": "node scripts/build-whisper-mac.cjs && electron-vite build && electron-builder --mac --arm64 --publish never",
+    "test:platform": "node --test scripts/test-platform.cjs"
   },
   "dependencies": {
     "docx": "^9.13.0",

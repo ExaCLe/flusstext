@@ -61,7 +61,7 @@ export function HotkeyRecorder({ value, onChange, allowSingle = true }: { value:
             combo.length ? (
               <span className="inline-flex gap-1">
                 {sortKeys(combo).map((k) => (
-                  <Kbd key={k}>{keyLabel(k)}</Kbd>
+                  <Kbd key={k}>{keyLabel(k, window.api.platform)}</Kbd>
                 ))}
               </span>
             ) : (

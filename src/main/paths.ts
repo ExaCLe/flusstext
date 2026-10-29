@@ -11,7 +11,7 @@ export const paths = {
   recordings: join(app.getPath('userData'), 'recordings'),
   dictations: join(app.getPath('userData'), 'dictations.json'),
   /** Modelle sind groß -> nicht ins Roaming-Profil */
-  models: join(localAppData, 'Flusstext', 'models'),
+  models: process.platform === 'darwin' ? join(app.getPath('userData'), 'models') : join(localAppData, 'Flusstext', 'models'),
   tmp: join(app.getPath('temp'), 'flusstext')
 }
 

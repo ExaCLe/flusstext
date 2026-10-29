@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, shell, Tray } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, shell, systemPreferences, Tray } from 'electron'
 import { execFile } from 'node:child_process'
 import { existsSync, statfsSync, writeFileSync } from 'node:fs'
 import { cpus } from 'node:os'
@@ -31,6 +31,10 @@ let quitting = false
 let gpuName: string | undefined
 
 function detectGpu(): void {
+  if (process.platform === 'darwin') {
+    gpuName = 'Apple Metal'
+    return
+  }
   execFile('nvidia-smi', ['--query-gpu=name', '--format=csv,noheader'], { windowsHide: true }, (err, out) => {
     if (!err && out.trim()) {
       gpuName = out.trim().split('\n')[0]
@@ -184,6 +188,27 @@ app.whenReady().then(() => {
   models.cleanup()
   registerIpc()
   applyTheme()
+  if (process.platform === 'darwin') {
+    Menu.setApplicationMenu(Menu.buildFromTemplate([
+      { role: 'appMenu', submenu: [
+        { role: 'about' },
+        { label: 'Diktat-Zugriff erlauben …', click: () => {
+          systemPreferences.isTrustedAccessibilityClient(true)
+          void shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility')
+        } },
+        { type: 'separator' },
+        { role: 'services' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ] },
+      { role: 'editMenu' },
+      { role: 'viewMenu' },
+      { role: 'windowMenu' }
+    ]))
+  }
   detectGpu()
   const hidden = process.argv.includes('--hidden')
   const win = createMainWindow()
@@ -215,3 +240,5 @@ app.on('before-quit', () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
+
+app.on('activate', () => createMainWindow())

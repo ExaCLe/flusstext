@@ -11,8 +11,13 @@ import { downloadError, fetchTo } from './download'
 
 const MARKER = '.complete'
 
+function platformCatalog(): ModelDef[] {
+  // macOS ships its own Metal/CPU runtime; Windows archives cannot run here.
+  return CATALOG.filter((m) => process.platform !== 'darwin' || m.kind !== 'runtime')
+}
+
 export function modelDef(id: string): ModelDef | undefined {
-  return CATALOG.find((m) => m.id === id)
+  return platformCatalog().find((m) => m.id === id)
 }
 
 export function modelPath(id: string, file?: string): string {
@@ -30,7 +35,7 @@ class ModelManager extends EventEmitter {
   hasNvidia = false
 
   list(): ModelStatus[] {
-    return CATALOG.map((m) => {
+    return platformCatalog().map((m) => {
       const d = this.downloads.get(m.id)
       return {
         ...m,
@@ -60,7 +65,7 @@ class ModelManager extends EventEmitter {
     // Abhängigkeiten (z. B. VAD) mitladen
     for (const dep of def.requires ?? []) if (!isInstalled(dep)) void this.download(dep)
     // Whisper-Modelle brauchen eine whisper.cpp-Laufzeit: GPU-Variante, falls eine NVIDIA-Karte vorhanden ist
-    if (def.engine === 'whispercpp' && def.kind === 'asr' && !isInstalled('whispercpp-cuda') && !isInstalled('whispercpp-cpu')) {
+    if (process.platform !== 'darwin' && def.engine === 'whispercpp' && def.kind === 'asr' && !isInstalled('whispercpp-cuda') && !isInstalled('whispercpp-cpu')) {
       const rt = this.hasNvidia && settings.get().useGpu ? 'whispercpp-cuda' : 'whispercpp-cpu'
       if (!this.downloads.has(rt)) void this.download(rt)
     }

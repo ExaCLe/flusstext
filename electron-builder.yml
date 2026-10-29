@@ -28,3 +28,30 @@ nsis:
   language: '1031'
 # Bereits installiertes Electron verwenden (kein zweiter Download)
 electronDist: node_modules/electron/dist
+mac:
+  icon: build/icon.png
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [arm64]
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
+  identity: '-'
+  hardenedRuntime: true
+  notarize: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: Flusstext benötigt das Mikrofon für lokale Aufnahmen und Diktate.
+  extraResources:
+    - from: build/whisper-mac
+      to: whisper
+      filter: [whisper-server, LICENSE, SOURCE.txt]
+dmg:
+  sign: false
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications

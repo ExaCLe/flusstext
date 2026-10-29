@@ -147,6 +147,11 @@ export function sortKeys(keys: number[]): number[] {
   })
 }
 
-export function keyLabel(code: number): string {
+export function keyLabel(code: number, platform = 'win32'): string {
+  if (platform === 'darwin') {
+    if (code === 3675 || code === 3676) return '⌘'
+    if (code === 56 || code === 3640) return '⌥'
+    if (code === 29 || code === 3613) return '⌃'
+  }
   return KEY_LABELS[code] ?? `#${code}`
 }

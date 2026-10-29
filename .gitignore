@@ -5,3 +5,5 @@ dist/
 .vite/
 __pycache__/
 .venv-export/
+build/whisper-source/
+build/whisper-mac/

@@ -48,7 +48,7 @@ export function SettingsPage(): ReactNode {
           >
             <Select className="w-52" value={settings.language} options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))} onChange={(v) => setSettings({ language: v })} />
           </SettingRow>
-          <SettingRow title="Mit Windows starten" description="Flusstext startet minimiert im Infobereich, damit das Diktat sofort bereit ist.">
+          <SettingRow title={window.api.platform === 'darwin' ? 'Bei Anmeldung starten' : 'Mit Windows starten'} description="Flusstext startet minimiert im Infobereich, damit das Diktat sofort bereit ist.">
             <Switch checked={settings.launchAtLogin} onChange={(v) => setSettings({ launchAtLogin: v })} />
           </SettingRow>
         </Section>

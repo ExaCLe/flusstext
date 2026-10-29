@@ -119,7 +119,7 @@ function MicStep(): ReactNode {
         rec.current = r
         setMics(await listMicrophones())
       })
-      .catch(() => setError('Kein Zugriff aufs Mikrofon. Bitte unter Windows-Einstellungen › Datenschutz › Mikrofon erlauben.'))
+      .catch(() => setError(window.api.platform === 'darwin' ? 'Kein Zugriff aufs Mikrofon. Bitte unter Systemeinstellungen › Datenschutz & Sicherheit › Mikrofon erlauben.' : 'Kein Zugriff aufs Mikrofon. Bitte unter Windows-Einstellungen › Datenschutz › Mikrofon erlauben.'))
     return () => {
       alive = false
       rec.current?.close()
@@ -178,6 +178,7 @@ function HotkeyStep(): ReactNode {
             ]}
           />
         </div>
+        {window.api.platform === 'darwin' && <p className="text-[13px] leading-relaxed text-muted">Für globale Kurzbefehle und automatisches Einfügen: Im Menü Flusstext › Diktat-Zugriff erlauben öffnen und Flusstext unter Bedienungshilfen erlauben. Danach zur App zurückkehren.</p>}
         <label className="flex items-center justify-between rounded-xl border border-line px-4 py-3 text-[13.5px] font-medium">
           Diktat aktivieren
           <Switch checked={d.enabled} onChange={(v) => setSettings({ dictation: { enabled: v } })} />
