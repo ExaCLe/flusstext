@@ -1,7 +1,7 @@
 {
   "name": "flusstext",
   "productName": "Flusstext",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lokale Transkription & Diktat mit Open-Source-Modellen",
   "main": "./out/main/index.js",
   "author": "ExaCLe",
@@ -14,6 +14,7 @@
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test:downloads": "electron scripts/test-downloads.cjs",
     "dist": "electron-vite build && electron-builder --win"
   },
   "dependencies": {

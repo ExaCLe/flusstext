@@ -3,9 +3,13 @@ productName: Flusstext
 directories:
   buildResources: build
 files:
-  - out/**
+  - out/main/**
+  - out/preload/**
+  - out/renderer/**
   - package.json
-  - build/icon.png
+  - from: build
+    to: build
+    filter: [icon.png]
   - '!**/*.map'
 asarUnpack:
   - node_modules/sherpa-onnx-*/**

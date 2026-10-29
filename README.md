@@ -29,6 +29,14 @@ Alle Modelle sind frei nutzbar (nicht-kommerziell und überwiegend auch kommerzi
 
 Die Modelle liegen unter `%LOCALAPPDATA%\Flusstext\models`, Transkripte und Aufnahmen unter `%APPDATA%\Flusstext`.
 
+## Downloads im Firmennetz
+
+Modell-Downloads verwenden die Chromium-Netzwerkschicht von Electron und damit die Windows-Proxykonfiguration einschließlich PAC/WPAD und die Zertifikatsprüfung des Systems. Bei einem Stillstand ohne Datenempfang wird der Download nach 60 Sekunden abgebrochen und kann erneut gestartet werden. Proxy-Anmeldung, Zertifikatsprobleme und Verbindungsfehler erhalten eigene Fehlermeldungen; Webseiten eines Firmenproxies werden nicht als Modelldateien installiert.
+
+Falls ein Download im VPN weiterhin scheitert, sollte die IT die Windows-Proxyeinstellungen, das Vertrauen in das Firmenzertifikat und die Freigabe der Modellquellen auf GitHub bzw. Hugging Face samt deren Download-Weiterleitungen prüfen. Proxies, die eine separate Anmeldung benötigen, müssen diese für die App erlauben. Ein erfolgreicher Download in einer anderen App schließt unterschiedliche Freigaben oder Downloadquellen nicht aus.
+
+Die Spracherkennung und Sprecherzuordnung verwenden anschließend lokale Modelldateien. Für Whisper gehen Audio-Anfragen ausschließlich an den lokalen Prozess auf `127.0.0.1`; Flusstext enthält keinen Cloud-Transkriptionsdienst und keine Nutzungs-Telemetrie. Fehlende Modelle werden weiterhin über den Modell-Manager geladen; Silero VAD wird beim Start bei Bedarf automatisch heruntergeladen.
+
 ## Entwicklung
 
 Voraussetzung ist Node.js **22.12 oder neuer**. Der Electron-Installer und electron-builder laufen nicht mehr mit Node 20.
@@ -37,6 +45,7 @@ Voraussetzung ist Node.js **22.12 oder neuer**. Der Electron-Installer und elect
 npm install
 npm run dev        # App mit Hot-Reload starten
 npm run typecheck
+npm run test:downloads # Electron-Integrationstests mit lokalem PAC-/Proxyserver
 npm run dist       # Windows-Installer nach dist/ bauen
 ```
 

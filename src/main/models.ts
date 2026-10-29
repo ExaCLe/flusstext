@@ -1,13 +1,12 @@
 import { EventEmitter } from 'node:events'
 import { spawn } from 'node:child_process'
-import { createWriteStream, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
 import { CATALOG } from '@shared/catalog'
 import type { DownloadProgress, ModelDef, ModelStatus } from '@shared/types'
 import { paths } from './paths'
 import { settings } from './settings'
+import { downloadError, fetchTo } from './download'
 
 const MARKER = '.complete'
 
@@ -115,7 +114,7 @@ class ModelManager extends EventEmitter {
     } catch (e) {
       const cancelled = abort.signal.aborted
       state.state = cancelled ? 'cancelled' : 'error'
-      state.error = cancelled ? undefined : friendlyError(e)
+      state.error = cancelled ? undefined : downloadError(e)
       this.changed(true)
       if (cancelled) {
         this.downloads.delete(id)
@@ -167,31 +166,6 @@ class ModelManager extends EventEmitter {
     }
     if (s.dictationModel && !isInstalled(s.dictationModel)) settings.set({ dictationModel: null })
   }
-}
-
-function friendlyError(e: unknown): string {
-  const msg = (e as Error).message ?? String(e)
-  if (/fetch failed|ENOTFOUND|ECONNRESET|ETIMEDOUT/i.test(msg)) return 'Keine Verbindung – bitte erneut versuchen'
-  if (/ENOSPC/i.test(msg)) return 'Nicht genug Speicherplatz'
-  return msg.length > 80 ? msg.slice(0, 80) + '…' : msg
-}
-
-async function fetchTo(
-  url: string,
-  target: string,
-  signal: AbortSignal,
-  onBytes: (n: number) => void,
-  onLength?: (n: number) => void
-): Promise<void> {
-  const res = await fetch(url, { signal, redirect: 'follow', headers: { 'User-Agent': 'Flusstext/0.1' } })
-  if (!res.ok || !res.body) throw new Error(`Download fehlgeschlagen (HTTP ${res.status})`)
-  const len = Number(res.headers.get('content-length') ?? 0)
-  if (len && onLength) onLength(len)
-  const part = `${target}.part`
-  const body = Readable.fromWeb(res.body as never)
-  body.on('data', (chunk: Buffer) => onBytes(chunk.length))
-  await pipeline(body, createWriteStream(part), { signal })
-  renameSync(part, target)
 }
 
 /** Entpackt .tar.bz2 und .zip mit dem in Windows enthaltenen bsdtar. */
