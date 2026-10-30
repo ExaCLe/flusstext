@@ -30,6 +30,11 @@ jobs:
             throw "Tag does not match package version $version"
           }
       - run: npm ci
+      - name: Install required runtime binaries
+        run: |
+          node node_modules/electron/install.js
+          node node_modules/ffmpeg-static/install.js
+          node -e "const fs=require('node:fs'); for (const p of [require('electron'),require('ffmpeg-static')]) { if (!p || !fs.existsSync(p)) throw new Error('Missing runtime binary: '+p); }"
       - run: npm run typecheck
       - run: npm run test:nemotron
       - name: Build Windows x64 installer
