@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="1024" height="1024">
+  <!-- iOS app icon master: full-bleed square, no corner mask. iOS applies its own mask.
+       Bar geometry matches assets/icon.svg. -->
+  <rect width="28" height="28" fill="#141517"/>
+  <g fill="#fafaf9"><rect x="5" y="10" width="3" height="8" rx="1.5"/><rect x="10" y="7" width="3" height="14" rx="1.5"/><rect x="15" y="9" width="3" height="10" rx="1.5"/><rect x="20" y="11.5" width="3" height="5" rx="1.5"/></g>
+</svg>

@@ -1,0 +1,750 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2E27EC502974AAC5B9D26EB1 /* libPods-FlusstextNative-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C6F72262ECEE2B21FDB7F80 /* libPods-FlusstextNative-macOS.a */; };
+		4A27CBD265552E20BE64EF5C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D4131712F433824140FD51AE /* PrivacyInfo.xcprivacy */; };
+		5142014D2437B4B30078DB4F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5142014C2437B4B30078DB4F /* AppDelegate.swift */; };
+		514201522437B4B40078DB4F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 514201512437B4B40078DB4F /* Assets.xcassets */; };
+		63928C8E548A42D0DC7FEA06 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72253653FC2DD831302DC5E2 /* Cocoa.framework */; };
+		8CB71F1606A237336531A6B3 /* Geist.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3B4C7FEFEE4B2376975D3C8F /* Geist.ttf */; };
+		8CFD8BDD8C66CC61E9D8FADC /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28D3EC665503A501C069942A /* ServiceManagement.framework */; };
+		C64255EB8C8B40BAC67DFE58 /* MacSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ACE613FC321243EFF39FBE4 /* MacSmokeTests.swift */; };
+		CAF5A88EFC90FB7AC8DCDBDC /* FlusstextHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5DFAC391B54AE487692980B9 /* FlusstextHost.mm */; };
+		DD51A03673E1C256209426AC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D4131712F433824140FD51AE /* PrivacyInfo.xcprivacy */; };
+		DF0A721F0FFA5AAE97821B12 /* GeistMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FEFFDE63B3C755A2B37A992C /* GeistMono.ttf */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		13B07F961A680F5B00A75B9A /* FlusstextNative.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlusstextNative.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		28D3EC665503A501C069942A /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/ServiceManagement.framework; sourceTree = DEVELOPER_DIR; };
+		2ACE613FC321243EFF39FBE4 /* MacSmokeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MacSmokeTests.swift; sourceTree = "<group>"; };
+		2C6F72262ECEE2B21FDB7F80 /* libPods-FlusstextNative-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FlusstextNative-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3B4C7FEFEE4B2376975D3C8F /* Geist.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = Geist.ttf; sourceTree = "<group>"; };
+		4646E17F2D091634CB39BC09 /* Pods-FlusstextNative-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FlusstextNative-macOS.release.xcconfig"; path = "Target Support Files/Pods-FlusstextNative-macOS/Pods-FlusstextNative-macOS.release.xcconfig"; sourceTree = "<group>"; };
+		514201492437B4B30078DB4F /* FlusstextNative.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlusstextNative.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5142014C2437B4B30078DB4F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		514201512437B4B40078DB4F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		514201562437B4B40078DB4F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		514201592437B4B40078DB4F /* FlusstextNative.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FlusstextNative.entitlements; sourceTree = "<group>"; };
+		576CF4E631E86C89374CF5A2 /* Pods-FlusstextNative-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FlusstextNative-macOS.debug.xcconfig"; path = "Target Support Files/Pods-FlusstextNative-macOS/Pods-FlusstextNative-macOS.debug.xcconfig"; sourceTree = "<group>"; };
+		5DFAC391B54AE487692980B9 /* FlusstextHost.mm */ = {isa = PBXFileReference; includeInIndex = 1; path = FlusstextHost.mm; sourceTree = "<group>"; };
+		6D489ADE7624C67180D80F5F /* FlusstextMacUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlusstextMacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		72253653FC2DD831302DC5E2 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		7D14C9A5DAEAA36231750503 /* FlusstextHost.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = FlusstextHost.h; sourceTree = "<group>"; };
+		D4131712F433824140FD51AE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		DDD8B8156DBEE64BEA6D1E73 /* FlusstextAudioDecode.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = FlusstextAudioDecode.h; sourceTree = "<group>"; };
+		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		FEFFDE63B3C755A2B37A992C /* GeistMono.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = GeistMono.ttf; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		514201462437B4B30078DB4F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2E27EC502974AAC5B9D26EB1 /* libPods-FlusstextNative-macOS.a in Frameworks */,
+				8CFD8BDD8C66CC61E9D8FADC /* ServiceManagement.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E4435D97CE5629E6E63DDDE5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63928C8E548A42D0DC7FEA06 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0FFCCBCE11C3F356A329847A /* Flusstext host */ = {
+			isa = PBXGroup;
+			children = (
+				7D14C9A5DAEAA36231750503 /* FlusstextHost.h */,
+				5DFAC391B54AE487692980B9 /* FlusstextHost.mm */,
+				DDD8B8156DBEE64BEA6D1E73 /* FlusstextAudioDecode.h */,
+			);
+			name = "Flusstext host";
+			path = ../apple;
+			sourceTree = "<group>";
+		};
+		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
+				2C6F72262ECEE2B21FDB7F80 /* libPods-FlusstextNative-macOS.a */,
+				D5BF62B458767EF2EFCFA777 /* OS X */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		36D72ECE4351D18BF4AFC027 /* Flusstext fonts */ = {
+			isa = PBXGroup;
+			children = (
+				3B4C7FEFEE4B2376975D3C8F /* Geist.ttf */,
+				FEFFDE63B3C755A2B37A992C /* GeistMono.ttf */,
+			);
+			name = "Flusstext fonts";
+			path = ../assets/fonts;
+			sourceTree = "<group>";
+		};
+		5142014A2437B4B30078DB4F /* FlusstextNative-macOS */ = {
+			isa = PBXGroup;
+			children = (
+				5142014C2437B4B30078DB4F /* AppDelegate.swift */,
+				514201512437B4B40078DB4F /* Assets.xcassets */,
+				514201562437B4B40078DB4F /* Info.plist */,
+				514201592437B4B40078DB4F /* FlusstextNative.entitlements */,
+			);
+			path = "FlusstextNative-macOS";
+			sourceTree = "<group>";
+		};
+		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Libraries;
+			sourceTree = "<group>";
+		};
+		83CBB9F61A601CBA00E9B192 = {
+			isa = PBXGroup;
+			children = (
+				5142014A2437B4B30078DB4F /* FlusstextNative-macOS */,
+				832341AE1AAA6A7D00B99B32 /* Libraries */,
+				83CBBA001A601CBA00E9B192 /* Products */,
+				2D16E6871FA4F8E400B85C8A /* Frameworks */,
+				0FFCCBCE11C3F356A329847A /* Flusstext host */,
+				36D72ECE4351D18BF4AFC027 /* Flusstext fonts */,
+				D4131712F433824140FD51AE /* PrivacyInfo.xcprivacy */,
+				A0D29B97B23821E303A5A4E3 /* Pods */,
+				F915D2DC10D57B075B7C4587 /* Native UI tests */,
+			);
+			indentWidth = 2;
+			sourceTree = "<group>";
+			tabWidth = 2;
+			usesTabs = 0;
+		};
+		83CBBA001A601CBA00E9B192 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				13B07F961A680F5B00A75B9A /* FlusstextNative.app */,
+				514201492437B4B30078DB4F /* FlusstextNative.app */,
+				6D489ADE7624C67180D80F5F /* FlusstextMacUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A0D29B97B23821E303A5A4E3 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				576CF4E631E86C89374CF5A2 /* Pods-FlusstextNative-macOS.debug.xcconfig */,
+				4646E17F2D091634CB39BC09 /* Pods-FlusstextNative-macOS.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		D5BF62B458767EF2EFCFA777 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				28D3EC665503A501C069942A /* ServiceManagement.framework */,
+				72253653FC2DD831302DC5E2 /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		F915D2DC10D57B075B7C4587 /* Native UI tests */ = {
+			isa = PBXGroup;
+			children = (
+				2ACE613FC321243EFF39FBE4 /* MacSmokeTests.swift */,
+			);
+			name = "Native UI tests";
+			path = ../e2e;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		13B07F861A680F5B00A75B9A /* FlusstextNative-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "FlusstextNative-iOS" */;
+			buildPhases = (
+				13B07F871A680F5B00A75B9A /* Sources */,
+				13B07F8C1A680F5B00A75B9A /* Frameworks */,
+				13B07F8E1A680F5B00A75B9A /* Resources */,
+				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FlusstextNative-iOS";
+			productName = FlusstextNative;
+			productReference = 13B07F961A680F5B00A75B9A /* FlusstextNative.app */;
+			productType = "com.apple.product-type.application";
+		};
+		514201482437B4B30078DB4F /* FlusstextNative-macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5142015A2437B4B40078DB4F /* Build configuration list for PBXNativeTarget "FlusstextNative-macOS" */;
+			buildPhases = (
+				1A938104A937498D81B3BD3B /* [CP] Check Pods Manifest.lock */,
+				514201452437B4B30078DB4F /* Sources */,
+				514201462437B4B30078DB4F /* Frameworks */,
+				514201472437B4B30078DB4F /* Resources */,
+				381D8A6E24576A4E00465D17 /* Bundle React Native code and images */,
+				6D684D15B3072DB69574C9D1 /* [CP] Embed Pods Frameworks */,
+				AEEF589971DD35671C1F2EDD /* [CP] Copy Pods Resources */,
+				614D5335E185C874BCA894AF /* Bundle local speech engine */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FlusstextNative-macOS";
+			productName = FlusstextNative;
+			productReference = 514201492437B4B30078DB4F /* FlusstextNative.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CE7E350FE78A8EAC0462FF53 /* FlusstextMacUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 97757966A392AF702FCBBF7D /* Build configuration list for PBXNativeTarget "FlusstextMacUITests" */;
+			buildPhases = (
+				92A7E56D127AF8CE12096A38 /* Sources */,
+				E4435D97CE5629E6E63DDDE5 /* Frameworks */,
+				5769344959E7946245E63036 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FlusstextMacUITests;
+			productName = FlusstextMacUITests;
+			productReference = 6D489ADE7624C67180D80F5F /* FlusstextMacUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		83CBB9F71A601CBA00E9B192 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1130;
+				TargetAttributes = {
+					13B07F861A680F5B00A75B9A = {
+						LastSwiftMigration = 1120;
+					};
+					514201482437B4B30078DB4F = {
+						CreatedOnToolsVersion = 11.4;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "FlusstextNative" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 83CBB9F61A601CBA00E9B192;
+			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				13B07F861A680F5B00A75B9A /* FlusstextNative-iOS */,
+				514201482437B4B30078DB4F /* FlusstextNative-macOS */,
+				CE7E350FE78A8EAC0462FF53 /* FlusstextMacUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		13B07F8E1A680F5B00A75B9A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4A27CBD265552E20BE64EF5C /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		514201472437B4B30078DB4F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
+				8CB71F1606A237336531A6B3 /* Geist.ttf in Resources */,
+				DF0A721F0FFA5AAE97821B12 /* GeistMono.ttf in Resources */,
+				DD51A03673E1C256209426AC /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5769344959E7946245E63036 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle React Native code and images";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export NODE_BINARY=node\n../node_modules/react-native-macos/scripts/react-native-xcode.sh\n";
+		};
+		1A938104A937498D81B3BD3B /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-FlusstextNative-macOS-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		381D8A6E24576A4E00465D17 /* Bundle React Native code and images */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle React Native code and images";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export NODE_BINARY=node\n../node_modules/react-native-macos/scripts/react-native-xcode.sh\n";
+		};
+		614D5335E185C874BCA894AF /* Bundle local speech engine */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle local speech engine";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nENGINE_SOURCE=\"$SRCROOT/../engine-resources\"\ntest -x \"$ENGINE_SOURCE/node\" || { echo \"Run npm run engine:mac from native/ first\"; exit 1; }\n/usr/bin/ditto \"$ENGINE_SOURCE\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/engine\"\n";
+		};
+		6D684D15B3072DB69574C9D1 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FlusstextNative-macOS/Pods-FlusstextNative-macOS-frameworks.sh",
+				"${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/macosx/hermesvm.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermesvm.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FlusstextNative-macOS/Pods-FlusstextNative-macOS-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		AEEF589971DD35671C1F2EDD /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FlusstextNative-macOS/Pods-FlusstextNative-macOS-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RCT-Folly/RCT-Folly_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RNSVG/RNSVGFilters.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ReactNativeFs/RNFS_PrivacyInfo.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/boost/boost_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/glog/glog_privacy.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RCT-Folly_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNSVGFilters.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNFS_PrivacyInfo.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/boost_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/glog_privacy.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FlusstextNative-macOS/Pods-FlusstextNative-macOS-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		13B07F871A680F5B00A75B9A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		514201452437B4B30078DB4F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5142014D2437B4B30078DB4F /* AppDelegate.swift in Sources */,
+				CAF5A88EFC90FB7AC8DCDBDC /* FlusstextHost.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		92A7E56D127AF8CE12096A38 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C64255EB8C8B40BAC67DFE58 /* MacSmokeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		13B07F941A680F5B00A75B9A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "FlusstextNative-iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = FlusstextNative;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		13B07F951A680F5B00A75B9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = "FlusstextNative-iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = FlusstextNative;
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		1D587527EF97F96084663B11 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.flusstext.native.macos.uitests;
+				PRODUCT_MODULE_NAME = FlusstextMacUITests;
+				PRODUCT_NAME = FlusstextMacUITests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "FlusstextNative-macOS";
+			};
+			name = Debug;
+		};
+		5142015B2437B4B40078DB4F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 576CF4E631E86C89374CF5A2 /* Pods-FlusstextNative-macOS.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "FlusstextNative-macOS/FlusstextNative.entitlements";
+				CODE_SIGN_IDENTITY = "-";
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = NO;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "FlusstextNative-macos/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.3;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = de.flusstext.native.macos;
+				PRODUCT_NAME = Flusstext;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		5142015C2437B4B40078DB4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4646E17F2D091634CB39BC09 /* Pods-FlusstextNative-macOS.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "FlusstextNative-macOS/FlusstextNative.entitlements";
+				CODE_SIGN_IDENTITY = "-";
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "FlusstextNative-macos/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.3;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = de.flusstext.native.macos;
+				PRODUCT_NAME = Flusstext;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		83CBBA201A601CBA00E9B192 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = "/usr/lib/swift $(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(SDKROOT)/usr/lib/swift",
+					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
+					"\"$(inherited)\"",
+				);
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				USE_HERMES = true;
+			};
+			name = Debug;
+		};
+		83CBBA211A601CBA00E9B192 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = "/usr/lib/swift $(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(SDKROOT)/usr/lib/swift",
+					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
+					"\"$(inherited)\"",
+				);
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
+				SDKROOT = iphoneos;
+				USE_HERMES = true;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B6B38BA9887761C3C95D2260 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.flusstext.native.macos.uitests;
+				PRODUCT_MODULE_NAME = FlusstextMacUITests;
+				PRODUCT_NAME = FlusstextMacUITests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "FlusstextNative-macOS";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "FlusstextNative-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				13B07F941A680F5B00A75B9A /* Debug */,
+				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5142015A2437B4B40078DB4F /* Build configuration list for PBXNativeTarget "FlusstextNative-macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5142015B2437B4B40078DB4F /* Debug */,
+				5142015C2437B4B40078DB4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "FlusstextNative" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				83CBBA201A601CBA00E9B192 /* Debug */,
+				83CBBA211A601CBA00E9B192 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		97757966A392AF702FCBBF7D /* Build configuration list for PBXNativeTarget "FlusstextMacUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B6B38BA9887761C3C95D2260 /* Release */,
+				1D587527EF97F96084663B11 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
+}
