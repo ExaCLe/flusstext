@@ -1,9 +1,12 @@
-import { BrowserWindow, nativeTheme, screen, shell } from 'electron'
+import { BrowserWindow, nativeTheme, screen, shell, type Rectangle } from 'electron'
 import { join } from 'node:path'
 import { settings } from './settings'
 
 let mainWindow: BrowserWindow | null = null
 let overlayWindow: BrowserWindow | null = null
+let overlayHitArea: Rectangle | null = null
+let overlayInteractive = false
+let overlayHitTimer: NodeJS.Timeout | undefined
 
 export const OVERLAY_SIZE = { width: 360, height: 120 }
 /** Höhe der Kopfzeile im Renderer (Fensterknöpfe sitzen darin) */
@@ -106,7 +109,13 @@ export function createOverlayWindow(): BrowserWindow {
     }
   })
   win.setAlwaysOnTop(true, 'screen-saver')
-  win.setIgnoreMouseEvents(true, { forward: true })
+  win.setIgnoreMouseEvents(true)
+  win.once('closed', () => {
+    clearInterval(overlayHitTimer)
+    overlayHitTimer = undefined
+    overlayHitArea = null
+    overlayInteractive = false
+  })
   load(win, 'overlay')
   overlayWindow = win
   return win
@@ -125,10 +134,48 @@ export function showOverlay(where: 'cursor' | 'primary' | 'keep' = 'cursor'): vo
   })
   win.showInactive()
   win.setAlwaysOnTop(true, 'screen-saver')
+  refreshOverlayHitTesting(win)
 }
 
 export function hideOverlay(): void {
-  getOverlayWindow()?.hide()
+  const win = getOverlayWindow()
+  if (!win) return
+  win.hide()
+  refreshOverlayHitTesting(win)
+}
+
+function updateOverlayHitTesting(win: BrowserWindow): void {
+  let interactive = false
+  if (overlayHitArea && win.isVisible()) {
+    const cursor = screen.getCursorScreenPoint()
+    const bounds = win.getContentBounds()
+    const x = cursor.x - bounds.x - overlayHitArea.x
+    const y = cursor.y - bounds.y - overlayHitArea.y
+    interactive = x >= 0 && x < overlayHitArea.width && y >= 0 && y < overlayHitArea.height
+  }
+  if (interactive === overlayInteractive) return
+  overlayInteractive = interactive
+  win.setIgnoreMouseEvents(!interactive)
+  win.webContents.send('overlay:hover', interactive)
+}
+
+function refreshOverlayHitTesting(win: BrowserWindow): void {
+  // Electron's mouse-event forwarding installs a global mouse hook on Windows.
+  // Poll the cursor only while there is a visible button or pill to click.
+  if (overlayHitArea && win.isVisible()) {
+    overlayHitTimer ??= setInterval(() => updateOverlayHitTesting(win), 25)
+  } else {
+    clearInterval(overlayHitTimer)
+    overlayHitTimer = undefined
+  }
+  updateOverlayHitTesting(win)
+}
+
+export function setOverlayHitArea(area: Rectangle | null): void {
+  const win = getOverlayWindow()
+  if (!win) return
+  overlayHitArea = area
+  refreshOverlayHitTesting(win)
 }
 
 export function sendToMain(channel: string, payload?: unknown): void {

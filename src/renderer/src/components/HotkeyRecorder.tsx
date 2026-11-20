@@ -11,6 +11,8 @@ export function HotkeyRecorder({ value, onChange, allowSingle = true }: { value:
   const [error, setError] = useState<string | null>(null)
   const down = useRef(new Set<number>())
   const max = useRef<number[]>([])
+  const save = useRef(onChange)
+  save.current = onChange
 
   useEffect(() => {
     if (!recording) return
@@ -18,6 +20,10 @@ export function HotkeyRecorder({ value, onChange, allowSingle = true }: { value:
     max.current = []
     void window.api.dictation.captureKeys(true)
     const off = window.api.dictation.onKey((e) => {
+      if (e.type === 'reset') {
+        setRecording(false)
+        return
+      }
       if (e.type === 'down') {
         if (e.keycode === ESC && down.current.size === 0) {
           setRecording(false)
@@ -36,7 +42,7 @@ export function HotkeyRecorder({ value, onChange, allowSingle = true }: { value:
           else if (onlyLetters) setError('Einzelne Buchstaben würden beim Tippen auslösen')
           else {
             setError(null)
-            onChange(keys)
+            save.current(keys)
           }
           setRecording(false)
         }
@@ -46,7 +52,7 @@ export function HotkeyRecorder({ value, onChange, allowSingle = true }: { value:
       off()
       void window.api.dictation.captureKeys(false)
     }
-  }, [recording, onChange, allowSingle])
+  }, [recording, allowSingle])
 
   return (
     <div className="flex flex-col items-end gap-1">

@@ -76,7 +76,8 @@ const api: Api = {
     stop: () => ipcRenderer.send('overlay:stop'),
     start: () => ipcRenderer.send('overlay:start'),
     hello: () => ipcRenderer.send('overlay:hello'),
-    setInteractive: (on) => ipcRenderer.send('overlay:interactive', on)
+    setHitArea: (area) => ipcRenderer.send('overlay:hitArea', area),
+    onHover: (cb) => on('overlay:hover', cb)
   }
 }
 

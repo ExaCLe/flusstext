@@ -1,29 +1,35 @@
 // Globales Diktat im Stil von Wispr Flow: Hotkey halten (oder antippen für freihändig),
 // sprechen, loslassen – der Text wird ins fokussierte Textfeld eingefügt.
-import { clipboard, ClipboardItem, ipcMain, Notification } from 'electron'
+import { clipboard, ClipboardItem, ipcMain, Notification, powerMonitor, type Rectangle } from 'electron'
 import { randomUUID } from 'node:crypto'
-import { uIOhook, UiohookKey } from 'uiohook-napi'
 import { keyLabel, normalizeKey, sortKeys } from '@shared/keys'
 import type { OverlayState } from '@shared/types'
 import { resolveAsr, applyReplacements } from './asr'
 import { engine } from './engine'
 import { isInstalled, modelPath } from './models'
+import { PressedKeys } from './pressed-keys'
 import { settings } from './settings'
 import { countWords, dictations } from './store'
-import { getOverlayWindow, hideOverlay, sendToAll, sendToMain, showOverlay } from './windows'
+import { createWindowsKeyboard, type KeyEvent } from './windows-keyboard'
+import { getOverlayWindow, hideOverlay, sendToAll, sendToMain, setOverlayHitArea, showOverlay } from './windows'
 
 const TAP_MS = 280
 const SR = 16000
+const ESCAPE = 1
+const WIN = 3675
 
 type Phase = 'idle' | 'arming' | 'listening' | 'processing'
 
 let phase: Phase = 'idle'
 let handsFree = false
-let pressedAt = 0
+let heldHotkey: { keys: number[]; time: number } | null = null
 let startedAt = 0
 let capturing = false
-let hookStarted = false
-const pressed = new Set<number>()
+let suspended = false
+let locked = false
+let keyboard: ReturnType<typeof createWindowsKeyboard> | undefined
+let keyWatchdog: NodeJS.Timeout | undefined
+const pressed = new PressedKeys()
 let audioWaiter: ((samples: Float32Array | null) => void) | null = null
 let hideTimer: NodeJS.Timeout | null = null
 let current: OverlayState = { kind: 'hidden' }
@@ -71,15 +77,11 @@ function command(type: 'start' | 'stop' | 'cancel'): void {
   getOverlayWindow()?.webContents.send('overlay:command', { type, deviceId: s.micDeviceId, sounds: s.dictation.sounds })
 }
 
-function matches(keys: number[]): boolean {
-  if (!keys.length || pressed.size !== keys.length) return false
-  return keys.every((k) => pressed.has(normalizeKey(k)))
-}
-
-function start(): void {
+function start(hotkey?: { keys: number[]; time: number }): void {
   if (hideTimer) clearTimeout(hideTimer)
   phase = 'arming'
-  handsFree = settings.get().dictation.mode === 'toggle'
+  heldHotkey = settings.get().dictation.mode === 'toggle' ? null : hotkey ?? null
+  handsFree = heldHotkey === null
   startedAt = Date.now()
   showOverlay()
   setState({ kind: 'arming' })
@@ -90,6 +92,7 @@ function start(): void {
 
 function stop(): void {
   if (phase !== 'listening' && phase !== 'arming') return
+  heldHotkey = null
   phase = 'processing'
   setState({ kind: 'processing' })
   const audio = new Promise<Float32Array | null>((resolve) => {
@@ -103,6 +106,7 @@ function stop(): void {
 function cancel(): void {
   if (phase === 'idle') return
   phase = 'idle'
+  heldHotkey = null
   audioWaiter = null
   command('cancel')
   rest()
@@ -188,11 +192,13 @@ async function snapshotClipboard(): Promise<ClipboardItem[] | null> {
 /** Text über die Zwischenablage + Strg+V einfügen und die Zwischenablage danach wiederherstellen. */
 async function paste(text: string, restore: boolean): Promise<boolean> {
   // Warten, bis der Nutzer alle Tasten losgelassen hat (sonst wird z. B. Win+Strg+V gesendet)
-  for (let i = 0; i < 40 && pressed.size > 0; i++) await sleep(25)
+  const keysHeld = (): boolean => pressed.size > 0 || !!keyboard?.modifiersDown()
+  for (let i = 0; i < 40 && keysHeld(); i++) await sleep(25)
   const saved = restore ? await snapshotClipboard() : null
   await clipboard.writeText(text)
   await sleep(30)
-  uIOhook.keyTap(UiohookKey.V, [UiohookKey.Ctrl])
+  // Bei neuen Tastendrücken oder blockiertem SendInput bleibt der Text zum manuellen Einfügen kopiert.
+  if (keysHeld() || !keyboard?.paste()) return false
   if (saved) {
     setTimeout(async () => {
       if ((await clipboard.readText()) !== text) return // Nutzer hat inzwischen etwas anderes kopiert
@@ -223,61 +229,91 @@ export function warmup(): Promise<void> {
   return warming
 }
 
-function onKeyDown(code: number): void {
-  const k = normalizeKey(code)
-  if (pressed.has(k)) return // Tastenwiederholung
-  pressed.add(k)
+function onKey(event: KeyEvent): void {
+  const k = pressed.update(event)
+  if (k === null) return
   if (capturing) {
-    sendToMain('dictation:key', { type: 'down', keycode: k })
+    sendToMain('dictation:key', { type: event.down ? 'down' : 'up', keycode: k })
     return
   }
   const s = settings.get()
-  if (!s.dictation.enabled) return
+  if (!s.dictation.enabled || !keyboard) return
+  const recording = phase === 'listening' || phase === 'arming'
 
-  if ((phase === 'listening' || phase === 'arming') && k === UiohookKey.Escape) return cancel()
-
-  if (matches(s.dictation.hotkey)) {
-    if (phase === 'idle') {
-      pressedAt = Date.now()
-      // Verhindert, dass beim Loslassen der Win-Taste das Startmenü aufgeht
-      if (s.dictation.hotkey.includes(UiohookKey.Meta)) uIOhook.keyTap(UiohookKey.F24)
-      start()
-    } else if (handsFree && (phase === 'listening' || phase === 'arming')) {
-      stop()
-    }
+  if (!event.down) {
+    if (!heldHotkey?.keys.includes(k) || !recording) return
+    if (s.dictation.mode === 'hybrid' && ((event.time - heldHotkey.time) >>> 0) < TAP_MS) {
+      heldHotkey = null
+      handsFree = true
+      if (phase === 'listening') setState({ kind: 'listening', handsFree, startedAt })
+    } else stop()
     return
   }
-  if (phase === 'idle' && matches(s.dictation.pasteLastHotkey)) void pasteLast()
+
+  if (recording && k === ESCAPE) return cancel()
+  const keys = s.dictation.hotkey
+  if ((phase === 'idle' || (recording && handsFree)) && pressed.matches(keys, event, keyboard.isDown)) {
+    if (keys.some((key) => normalizeKey(key) === WIN)) keyboard.dismissStartMenuOnRelease()
+    if (recording) stop()
+    else start({ keys: keys.map(normalizeKey), time: event.time })
+  } else if (phase === 'idle' && pressed.matches(s.dictation.pasteLastHotkey, event, keyboard.isDown)) {
+    void pasteLast().catch((e) => console.warn('Diktat konnte nicht eingefügt werden:', e))
+  }
 }
 
-function onKeyUp(code: number): void {
-  const k = normalizeKey(code)
-  const wasPressed = pressed.delete(k)
-  if (capturing) {
-    if (wasPressed) sendToMain('dictation:key', { type: 'up', keycode: k })
-    return
+function resetKeys(): void {
+  pressed.clear()
+  if (heldHotkey) cancel()
+  if (capturing) sendToMain('dictation:key', { type: 'reset' })
+}
+
+function refreshKeyboard(): void {
+  if (process.platform !== 'win32') return
+  const enabled = !suspended && !locked && (capturing || settings.get().dictation.enabled)
+  try {
+    const win = getOverlayWindow()
+    if (enabled && !keyboard && win) keyboard = createWindowsKeyboard(win, onKey, resetKeys)
+    keyboard?.listen(enabled)
+  } catch (e) {
+    console.error('Diktat-Tastatur konnte nicht eingerichtet werden:', e)
   }
-  const s = settings.get()
-  if (handsFree || (phase !== 'listening' && phase !== 'arming')) return
-  if (!s.dictation.hotkey.map(normalizeKey).includes(k)) return
-  if (s.dictation.mode === 'hybrid' && Date.now() - pressedAt < TAP_MS) {
-    // Kurz angetippt -> freihändiger Modus bis zum nächsten Druck
-    handsFree = true
-    setState({ kind: 'listening', handsFree: true, startedAt })
-    return
-  }
-  stop()
 }
 
 export function initDictation(): void {
-  uIOhook.on('keydown', (e) => onKeyDown(e.keycode))
-  uIOhook.on('keyup', (e) => onKeyUp(e.keycode))
-  try {
-    uIOhook.start()
-    hookStarted = true
-  } catch (e) {
-    console.error('Globaler Tastatur-Hook konnte nicht gestartet werden', e)
-  }
+  refreshKeyboard()
+  settings.on('change', (s, prev) => {
+    const d = s.dictation
+    const old = prev.dictation
+    if (d.enabled !== old.enabled || d.mode !== old.mode || d.hotkey.join() !== old.hotkey.join() ||
+      d.pasteLastHotkey.join() !== old.pasteLastHotkey.join()) {
+      resetKeys()
+      refreshKeyboard()
+    }
+  })
+  powerMonitor.on('suspend', () => {
+    suspended = true
+    resetKeys()
+    refreshKeyboard()
+  })
+  powerMonitor.on('resume', () => {
+    suspended = false
+    refreshKeyboard()
+  })
+  powerMonitor.on('lock-screen', () => {
+    locked = true
+    resetKeys()
+    refreshKeyboard()
+  })
+  powerMonitor.on('unlock-screen', () => {
+    locked = false
+    refreshKeyboard()
+  })
+  keyWatchdog = setInterval(() => {
+    if (!keyboard || pressed.size === 0) return
+    const lost = pressed.prune(keyboard.isDown)
+    if (heldHotkey && lost.some((code) => heldHotkey?.keys.includes(code))) cancel()
+    if (capturing && lost.length) resetKeys()
+  }, 150)
 
   ipcMain.on('overlay:micReady', () => {
     if (phase !== 'arming') return
@@ -286,6 +322,7 @@ export function initDictation(): void {
   })
   ipcMain.on('overlay:micError', (_e, message: string) => {
     phase = 'idle'
+    heldHotkey = null
     flash({ kind: 'error', message: message || 'Mikrofon nicht verfügbar' }, 2400)
   })
   ipcMain.on('overlay:audio', (_e, samples: Float32Array) => audioWaiter?.(samples))
@@ -294,15 +331,16 @@ export function initDictation(): void {
   ipcMain.on('overlay:start', () => {
     if (phase !== 'idle' || !settings.get().dictation.enabled) return
     start()
-    handsFree = true
   })
   ipcMain.on('overlay:hello', (e) => e.sender.send('overlay:state', current))
-  ipcMain.on('overlay:interactive', (_e, on: boolean) => {
-    getOverlayWindow()?.setIgnoreMouseEvents(!on, { forward: true })
+  ipcMain.on('overlay:hitArea', (e, area: Rectangle | null) => {
+    if (e.sender === getOverlayWindow()?.webContents) setOverlayHitArea(area)
   })
   ipcMain.handle('dictation:capture', (_e, on: boolean) => {
+    if (capturing === on) return
+    resetKeys()
     capturing = on
-    pressed.clear()
+    refreshKeyboard()
   })
 }
 
@@ -314,7 +352,13 @@ export function showIdlePill(): void {
 }
 
 export function stopDictation(): void {
-  if (hookStarted) uIOhook.stop()
+  if (keyWatchdog) clearInterval(keyWatchdog)
+  pressed.clear()
+  try {
+    keyboard?.listen(false)
+  } catch (e) {
+    console.warn('Diktat-Tastatur konnte nicht abgemeldet werden:', e)
+  }
 }
 
 export function dictationActive(): boolean {

@@ -1,4 +1,4 @@
-// Generiert aus uiohook-napi UiohookKey: Keycode -> deutsches Label
+// Gespeicherte Tastencodes mit deutschen Labels
 export const KEY_LABELS: Record<number, string> = {
   "1": "Esc",
   "2": "1",

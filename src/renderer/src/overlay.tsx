@@ -3,7 +3,7 @@
 import { createRoot } from 'react-dom/client'
 import { AnimatePresence, motion } from 'motion/react'
 import { Check, ClipboardCheck, X } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { OverlayState } from '@shared/types'
 import './styles.css'
 import { startRecorder, type Recorder } from './lib/recorder'
@@ -71,23 +71,27 @@ function Pill(): ReactNode {
   const [state, setState] = useState<OverlayState>({ kind: 'hidden' })
   const [levels, setLevels] = useState<number[]>(Array(BARS).fill(0))
   const [hover, setHover] = useState(false)
+  const hitArea = useRef<HTMLDivElement>(null)
   const rec = useRef<Recorder | null>(null)
   const soundsOn = useRef(true)
   const smoothed = useRef(0)
   const phase = useRef(0)
 
   useEffect(() => {
+    let micRequest = 0
+    const offHover = window.api.overlay.onHover(setHover)
     const offState = window.api.overlay.onState((s) => {
       setState(s)
       if (s.kind === 'error' && soundsOn.current) sounds.error()
     })
     const offCmd = window.api.overlay.onCommand(async (cmd) => {
+      const request = ++micRequest
       if (cmd.type === 'start') {
         soundsOn.current = cmd.sounds !== false
         rec.current?.close()
         setLevels(Array(BARS).fill(0))
         try {
-          rec.current = await startRecorder({
+          const recorder = await startRecorder({
             deviceId: cmd.deviceId,
             onLevel: (l) => {
               // Glätten und als Welle über die Balken verteilen (Mitte höher)
@@ -103,10 +107,17 @@ function Pill(): ReactNode {
               )
             }
           })
+          if (request !== micRequest) {
+            recorder.close()
+            return
+          }
+          rec.current = recorder
           if (soundsOn.current) sounds.start()
           window.api.overlay.micReady()
         } catch (e) {
-          window.api.overlay.micError((e as Error).name === 'NotAllowedError' ? 'Kein Mikrofonzugriff' : 'Mikrofon nicht verfügbar')
+          if (request === micRequest) {
+            window.api.overlay.micError((e as Error).name === 'NotAllowedError' ? 'Kein Mikrofonzugriff' : 'Mikrofon nicht verfügbar')
+          }
         }
       } else if (cmd.type === 'stop') {
         const samples = rec.current?.stop() ?? new Float32Array(0)
@@ -120,6 +131,9 @@ function Pill(): ReactNode {
     })
     window.api.overlay.hello()
     return () => {
+      micRequest++
+      rec.current?.close()
+      offHover()
       offState()
       offCmd()
     }
@@ -128,6 +142,23 @@ function Pill(): ReactNode {
   const timer = useTimer(state.kind === 'listening' ? state.startedAt : null)
   const visible = state.kind !== 'hidden'
   const idle = state.kind === 'idle'
+  const interactive = idle || state.kind === 'arming' || state.kind === 'listening'
+
+  useLayoutEffect(() => {
+    const target = hitArea.current
+    if (!interactive || !target) {
+      window.api.overlay.setHitArea(null)
+      return
+    }
+    const report = (): void => {
+      const { x, y, width, height } = target.getBoundingClientRect()
+      window.api.overlay.setHitArea({ x, y, width, height })
+    }
+    const observer = new ResizeObserver(report)
+    observer.observe(target)
+    report()
+    return () => observer.disconnect()
+  }, [interactive])
 
   let width = 268
   let height = 52
@@ -218,16 +249,9 @@ function Pill(): ReactNode {
       </AnimatePresence>
       {/* Größere Trefferfläche um die schmale Ruhe-Pille */}
       <div
+        ref={hitArea}
         className="flex h-[56px] items-end justify-center"
         style={{ minWidth: idle ? 120 : undefined }}
-        onMouseEnter={() => {
-          setHover(true)
-          window.api.overlay.setInteractive(true)
-        }}
-        onMouseLeave={() => {
-          setHover(false)
-          window.api.overlay.setInteractive(false)
-        }}
         onClick={() => idle && window.api.overlay.start()}
       >
         <AnimatePresence>

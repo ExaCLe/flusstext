@@ -75,7 +75,7 @@ export interface Api {
     onHistory(cb: () => void): Unsubscribe
     /** Globale Tastenaufnahme für die Hotkey-Einstellung */
     captureKeys(on: boolean): Promise<void>
-    onKey(cb: (e: { type: 'down' | 'up'; keycode: number }) => void): Unsubscribe
+    onKey(cb: (e: { type: 'down' | 'up'; keycode: number } | { type: 'reset' }) => void): Unsubscribe
     onState(cb: (s: OverlayState) => void): Unsubscribe
   }
   overlay: {
@@ -90,7 +90,8 @@ export interface Api {
     start(): void
     /** Aktuellen Zustand anfordern (nach dem Laden) */
     hello(): void
-    setInteractive(on: boolean): void
+    setHitArea(area: { x: number; y: number; width: number; height: number } | null): void
+    onHover(cb: (hover: boolean) => void): Unsubscribe
   }
 }
 

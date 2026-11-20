@@ -63,7 +63,7 @@ npm run dist       # Windows-Installer nach dist/ bauen
 
 ```
 src/main/      Electron-Hauptprozess: Fenster (Mica, eigene Titelleiste), IPC, Modell-Downloads,
-               Warteschlange, globaler Hotkey (uiohook-napi), Einfügen über die Zwischenablage, whisper.cpp-Server
+               Warteschlange, globale Tastenkürzel (Windows Raw Input), Einfügen über die Zwischenablage, whisper.cpp-Server
 src/engine/    utilityProcess mit sherpa-onnx: VAD, Diarisierung, Erkennung, Satzsegmentierung, Live-Modus
 src/preload/   typisierte API für den Renderer (window.api)
 src/renderer/  React + Tailwind v4: Hauptfenster (index.html) und Diktat-Pille (overlay.html)
