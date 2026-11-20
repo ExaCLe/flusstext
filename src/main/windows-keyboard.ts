@@ -93,13 +93,16 @@ export function createWindowsKeyboard(win: BrowserWindow, onKey: (key: KeyEvent)
   const api = loadWin32()
   const { ffi } = api
   const headerSize = ffi.sizeof(api.rawInputHeader)
-  const packet = Buffer.alloc(headerSize + ffi.sizeof(api.rawKeyboard))
+  const keyboardSize = ffi.sizeof(api.rawKeyboard)
+  // RAWINPUT can include padding for the other members of its data union.
+  const packet = Buffer.alloc(headerSize + Math.max(keyboardSize, 24))
   let listening = false
 
   function readKey(_wParam: Buffer, lParam: Buffer): void {
     const handle = ffi.decode(lParam, 'uintptr_t')
     const size = [packet.length]
-    if (api.read(handle, RID_INPUT, packet, size, headerSize) !== packet.length) return
+    const bytes = api.read(handle, RID_INPUT, packet, size, headerSize)
+    if (bytes < headerSize + keyboardSize || bytes > packet.length) return
     const header = ffi.decode(packet, api.rawInputHeader)
     if (header.type !== RIM_TYPEKEYBOARD || !header.device) return
     const key = ffi.decode(packet, headerSize, api.rawKeyboard)
