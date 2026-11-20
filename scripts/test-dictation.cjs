@@ -86,10 +86,51 @@ function testRawInput() {
   }
 }
 
+function testStartMenuMask() {
+  const down = new Set([0xa2])
+  const injected = []
+  const load = ffi.load
+  let keyboard
+  // Use the real FFI types, but capture SendInput without sending keys to the desktop.
+  ffi.load = (...args) => {
+    const user32 = load(...args)
+    return {
+      func(...signature) {
+        if (signature[0].includes('GetAsyncKeyState')) return (key) => down.has(key) ? -32768 : 0
+        if (signature[1] === 'SendInput') {
+          return (count, events) => {
+            injected.push(...events.map((event) => event.data.keyboard))
+            return count
+          }
+        }
+        return user32.func(...signature)
+      }
+    }
+  }
+  try {
+    keyboard = createWindowsKeyboard({}, () => {}, () => {})
+  } finally {
+    ffi.load = load
+  }
+
+  keyboard.dismissStartMenuOnRelease()
+  assert.equal(injected.length, 0, 'Ctrl alone sends no menu mask')
+
+  for (const winKey of [0x5b, 0x5c]) {
+    down.add(winKey)
+    keyboard.dismissStartMenuOnRelease()
+    assert.deepEqual(injected.splice(0).map(({ virtualKey, flags }) => [virtualKey, flags]), [
+      [0xe8, 0], [0xe8, 2]
+    ], 'mask either Win key without sending the Ctrl+Win+F24 touchpad toggle')
+    down.delete(winKey)
+  }
+}
+
 app.whenReady().then(() => {
   testShortcuts()
+  testStartMenuMask()
   testRawInput()
-  console.log('Diktat-Tests bestanden: Tastenkombinationen, verlorene Key-ups und Windows Raw Input.')
+  console.log('Diktat-Tests bestanden: Tastenkürzel, Startmenü-Maskierung und Windows Raw Input.')
   app.exit(0)
 }).catch((error) => {
   console.error(error)

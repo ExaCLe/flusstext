@@ -18,6 +18,8 @@ const INJECTED_BY_FLUSSTEXT = 0x464c5553
 const VK_LWIN = 0x5b
 const VK_RWIN = 0x5c
 const VK_LCONTROL = 0xa2
+// Windows uses Ctrl+Win+F24 to toggle the touchpad. Use an unassigned virtual key to mask Win.
+const START_MENU_MASK_KEY = 0xe8
 const MODIFIERS = [VK_LWIN, VK_RWIN, 0xa0, 0xa1, VK_LCONTROL, 0xa3, 0xa4, 0xa5]
 
 // Keep the stored shortcut codes, including the logical letter on layouts such as QWERTZ.
@@ -178,8 +180,9 @@ export function createWindowsKeyboard(win: BrowserWindow, onKey: (key: KeyEvent)
     isDown,
     modifiersDown,
     dismissStartMenuOnRelease(): void {
-      // F24 suppresses the Start menu without pressing or releasing Win or Ctrl.
-      if ((isDown(VK_LWIN) || isDown(VK_RWIN)) && !isDown(0x87)) send([inject(0x87, false), inject(0x87, true)])
+      if ((isDown(VK_LWIN) || isDown(VK_RWIN)) && !isDown(START_MENU_MASK_KEY)) {
+        send([inject(START_MENU_MASK_KEY, false), inject(START_MENU_MASK_KEY, true)])
+      }
     },
     paste(): boolean {
       // Send the entire shortcut together, after confirming no modifier is held.

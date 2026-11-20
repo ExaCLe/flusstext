@@ -1,7 +1,7 @@
 {
   "name": "flusstext",
   "productName": "Flusstext",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Lokale Transkription & Diktat mit Open-Source-Modellen",
   "main": "./out/main/index.js",
   "author": "ExaCLe",
